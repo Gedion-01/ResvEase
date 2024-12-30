@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from "vue-router";
-import HomeView from "@/views/HomeVue.vue";
-import SearchVue from "@/views/SearchVue.vue";
+import HomeView from "@/views/HomeView.vue";
+import SearchVue from "@/views/SearchView.vue";
+import HotelView from "@/views/HotelView.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -14,6 +15,11 @@ const router = createRouter({
       path: "/search",
       name: "Search",
       component: SearchVue,
+    },
+    {
+      path: "/hotel/:id",
+      name: "Hotel",
+      component: HotelView,
     },
   ],
 });

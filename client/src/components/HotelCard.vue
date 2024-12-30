@@ -49,7 +49,7 @@ const testArray = [1, 2, 3, 4, 5];
       <p class="text-sm mb-4">{{ hotel.description }}</p>
       <div class="flex justify-between items-center">
         <p class="text-lg font-bold">{{ hotel.price }} / night</p>
-        <RouterLink :to="'/hotel/${hotel.id}'">
+        <RouterLink :to="`/hotel/${hotel.id}`">
           <Button>View Details</Button>
         </RouterLink>
       </div>
