@@ -1,6 +1,8 @@
 <script setup lang="ts">
-import Search from "@/components/Search.vue";
+import HeroSection from "@/components/HeroSection.vue";
+import SearchSection from "@/components/SearchSection.vue";
 </script>
 <template>
-  <Search />
+  <HeroSection />
+  <SearchSection />
 </template>
