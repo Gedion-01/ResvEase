@@ -5,6 +5,8 @@ import { getLocalTimeZone } from "@internationalized/date";
 import { type Ref, ref, computed, reactive } from "vue";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { List, Map } from "lucide-vue-next";
 import {
   Popover,
   PopoverContent,
@@ -13,11 +15,21 @@ import {
 import { Search } from "lucide-vue-next";
 import { format } from "date-fns";
 
+defineProps({
+  isSticky: {
+    default: false,
+    type: Boolean,
+    Required: true,
+  },
+});
+
 const location = ref("");
 const guests = reactive({
   adults: 2,
   children: 0,
 });
+
+const viewMode = ref<"list" | "map">("list");
 
 const timeZone = getLocalTimeZone();
 const start = undefined;
@@ -65,11 +77,25 @@ const decrementChildren = () => {
 const incrementChildren = () => {
   guests.children++;
 };
+
+const quickFilters = [
+  "Free cancellation",
+  "Breakfast included",
+  "Pool",
+  "Beach access",
+  "Pet friendly",
+  "5-star hotels",
+];
 </script>
 
 <template>
-  <div class="w-full container mx-auto bg-background rounded-lg shadow-lg p-4">
-    <div class="grid grid-cols-1 md:grid-cols-11 gap-4">
+  <div
+    :class="[
+      'w-full mx-auto bg-background rounded-lg shadow-lg p-4',
+      'bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60',
+    ]"
+  >
+    <div class="grid grid-cols-1 md:grid-cols-11 gap-4 container">
       <div class="md:col-span-4 relative">
         <div className="w-full relative">
           <div
@@ -225,6 +251,36 @@ const incrementChildren = () => {
         <Button class="w-full h-full bg-primary hover:bg-primary/90">
           <Search class="" />
           Search
+        </Button>
+      </div>
+    </div>
+    <div class="mt-4 flex items-center justify-between container">
+      <div class="flex gap-2 overflow-x-auto pb-2">
+        <Badge
+          v-for="filter in quickFilters"
+          :key="filter"
+          variant="outline"
+          class="cursor-pointer hover:bg-primary hover:text-primary-foreground"
+        >
+          {{ filter }}
+        </Badge>
+      </div>
+      <div class="flex items-center gap-2">
+        <Button
+          :variant="viewMode === 'list' ? 'default' : 'outline'"
+          size="sm"
+          @click="() => (viewMode = 'list')"
+        >
+          <List class="h-4 w-4 mr-1" />
+          List
+        </Button>
+        <Button
+          :variant="viewMode === 'map' ? 'default' : 'outline'"
+          size="sm"
+          @click="() => (viewMode = 'map')"
+        >
+          <Map class="h-4 w-4 mr-1" />
+          Map
         </Button>
       </div>
     </div>

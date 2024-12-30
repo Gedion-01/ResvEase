@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { RouterLink } from "vue-router";
 import { Moon, Sun } from "lucide-vue-next";
-import SearchSection from "./SearchSection.vue";
 </script>
 <template>
   <header
-    class="sticky top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 mx-auto"
+    class="top-0 z-50 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 mx-auto"
   >
     <div class="w-full border-b">
       <div class="flex container h-14 items-center">
@@ -38,6 +37,5 @@ import SearchSection from "./SearchSection.vue";
         </div>
       </div>
     </div>
-    <!-- <SearchSection /> -->
   </header>
 </template>
