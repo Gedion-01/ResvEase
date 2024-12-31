@@ -35,12 +35,13 @@ func setup(t *testing.T) *testdb {
 	}
 
 	hotelStore := db.NewMongoHotelStore(client)
+	bookingStore := db.NewMongoBookingStore(client)
 
 	return &testdb{
 		client: client,
 		Store: &db.Store{
 			User:    db.NewMongoUserStore(client),
-			Room:    db.NewMongoRoomStore(client, hotelStore),
+			Room:    db.NewMongoRoomStore(client, hotelStore, bookingStore),
 			Booking: db.NewMongoBookingStore(client),
 			Hotel:   hotelStore,
 		},

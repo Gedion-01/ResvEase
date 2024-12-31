@@ -34,16 +34,18 @@ func main() {
 		log.Fatal(err)
 	}
 	hotelStore := db.NewMongoHotelStore(client)
+	bookingStore := db.NewMongoBookingStore(client)
 	store := &db.Store{
 		User:    db.NewMongoUserStore(client),
-		Booking: db.NewMongoBookingStore((client)),
-		Room:    db.NewMongoRoomStore(client, hotelStore),
+		Booking: db.NewMongoBookingStore(client),
+		Room:    db.NewMongoRoomStore(client, hotelStore, bookingStore),
 		Hotel:   hotelStore,
 	}
 	user := fixtures.AddUser(store, "james", "foo", false)
 	fmt.Println("james ->", api.CreateTokenFromUser(user))
 	admin := fixtures.AddUser(store, "admin", "admin", true)
 	fmt.Println("admin ->", api.CreateTokenFromUser(admin))
+
 	var roomTypes = []types.Room{
 		{
 			Name:        "Deluxe Room",
@@ -119,11 +121,10 @@ func main() {
 	)
 
 	for _, roomType := range roomTypes {
-		for i := 1; i <= 4; i++ { // Create 4 rooms for each type
-			roomName := fmt.Sprintf("%s #%d", roomType.Name, i) // e.g., "Deluxe Room #1"
+		for i := 0; i < 4; i++ {
 			fixtures.AddRoom(
 				store,
-				roomName,
+				roomType.Name,
 				roomType.Description,
 				roomType.Price,
 				roomType.Capacity,
@@ -131,6 +132,7 @@ func main() {
 				roomType.Images,
 				roomType.BedType,
 				roomType.Bedrooms,
+				true,
 				hotel.ID,
 			)
 		}

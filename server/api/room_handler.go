@@ -37,6 +37,10 @@ func NewRoomHandler(store *db.Store) *RoomHandler {
 	}
 }
 
+type RoomQueryParams struct {
+	db.Pagination
+}
+
 func (h *RoomHandler) HandleGetRooms(c *fiber.Ctx) error {
 	rooms, err := h.store.Room.GetRooms(c.Context(), bson.M{})
 	if err != nil {

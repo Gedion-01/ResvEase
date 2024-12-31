@@ -28,9 +28,9 @@ func main() {
 	// handle initialization
 	var (
 		hotelStore   = db.NewMongoHotelStore(client)
-		roomStore    = db.NewMongoRoomStore(client, hotelStore)
-		userStore    = db.NewMongoUserStore(client)
 		bookingStore = db.NewMongoBookingStore(client)
+		roomStore    = db.NewMongoRoomStore(client, hotelStore, bookingStore)
+		userStore    = db.NewMongoUserStore(client)
 		store        = &db.Store{
 			Hotel:   hotelStore,
 			Room:    roomStore,
