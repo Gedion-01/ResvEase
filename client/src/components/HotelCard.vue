@@ -25,8 +25,8 @@ const testArray = [1, 2, 3, 4, 5];
     <img
       :src="hotel.image"
       :alt="hotel.name"
-      width="{400}"
-      height="{200}"
+      width="400"
+      height="200"
       class="w-full h-48 object-cover"
     />
     <div class="p-4">
