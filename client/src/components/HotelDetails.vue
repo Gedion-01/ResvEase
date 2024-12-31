@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, ref } from "vue";
+import { ref } from "vue";
+import { Button } from "@/components/ui/button";
 import {
   Wifi,
   PocketKnife,
@@ -46,33 +47,33 @@ const testArray = [1, 2, 3, 4, 5];
 </script>
 <template>
   <div>
-    <h1 className="text-3xl font-bold mb-4">{{ hotel.name }}</h1>
-    <div className="flex items-center mb-4">
-      <MapPin className="h-5 w-5 mr-2" />
+    <h1 class="text-3xl font-bold mb-4">{{ hotel.name }}</h1>
+    <div class="flex items-center mb-4">
+      <MapPin class="h-5 w-5 mr-2" />
       <span>{{ hotel.location }}</span>
     </div>
-    <div className="mb-6 relative">
+    <div class="mb-6 relative">
       <img
         :src="hotel.images[currentImage]"
         :alt="hotel.name"
         width="800"
         height="400"
-        className="rounded-lg"
+        class="rounded-lg"
       />
-      <div className="absolute bottom-4 left-4 right-4 flex justify-center">
+      <div class="absolute bottom-4 left-4 right-4 flex justify-center">
         <Button
           v-for="(img, index) in hotel.images"
           :key="img"
           :variant="currentImage === index ? 'default' : 'secondary'"
           size="sm"
-          className="mx-1"
+          class="mx-1"
           @click="() => (currentImage = index)"
         >
           {{ index + 1 }}
         </Button>
       </div>
     </div>
-    <div className="flex items-center mb-4">
+    <div class="flex items-center mb-4">
       <Star
         v-for="(val, index) in testArray"
         :class="[
@@ -82,13 +83,13 @@ const testArray = [1, 2, 3, 4, 5];
             : 'text-gray-300',
         ]"
       />
-      <span className="ml-2 text-sm text-gray-600">{{
+      <span class="ml-2 text-sm text-gray-600">{{
         hotel.rating.toFixed(1)
       }}</span>
     </div>
-    <p className="mb-6">{{ hotel.description }}</p>
-    <h2 className="text-xl font-bold mb-4">Amenities</h2>
-    <div className="grid grid-cols-2 gap-4 mb-6">
+    <p class="mb-6">{{ hotel.description }}</p>
+    <h2 class="text-xl font-bold mb-4">Amenities</h2>
+    <div class="grid grid-cols-2 gap-4 mb-6">
       <div
         v-for="amenity in hotel.amenities"
         :key="amenity"
