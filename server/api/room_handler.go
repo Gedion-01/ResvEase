@@ -42,11 +42,12 @@ type RoomQueryParams struct {
 }
 
 func (h *RoomHandler) HandleGetRooms(c *fiber.Ctx) error {
-	rooms, err := h.store.Room.GetRooms(c.Context(), bson.M{})
-	if err != nil {
-		return err
-	}
-	return c.JSON(rooms)
+	// rooms, err := h.store.Room.GetRooms(c.Context(), bson.M{})
+	// if err != nil {
+	// 	return err
+	// }
+	// return c.JSON(rooms)
+	return nil
 }
 
 func (h *RoomHandler) HandleBookRoom(c *fiber.Ctx) error {
