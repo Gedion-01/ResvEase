@@ -4,6 +4,7 @@ import (
 	"context"
 	"hotel-reservation/types"
 	"os"
+	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -12,7 +13,8 @@ import (
 
 type RoomStore interface {
 	InsertRoom(context.Context, *types.Room) (*types.Room, error)
-	GetRooms(context.Context, bson.M) ([]map[string]interface{}, error)
+	// GetRooms(context.Context, bson.M) ([]map[string]interface{}, error)
+	GetRooms(ctx context.Context, hotelFilters, roomFilters bson.M, fromDate, tillDate *time.Time, page, limit int) ([]*types.GroupedRoom, error)
 }
 
 type MongoRoomStore struct {
@@ -33,34 +35,84 @@ func NewMongoRoomStore(client *mongo.Client, hotelStore HotelStore, bookingStore
 	}
 }
 
-// func (s *MongoRoomStore) GetRooms(ctx context.Context, filter bson.M) ([]*types.Room, error) {
-// 	resp, err := s.coll.Find(ctx, filter)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	var rooms []*types.Room
-// 	if err := resp.All(ctx, &rooms); err != nil {
-// 		return nil, err
-// 	}
-// 	return rooms, nil
-
-// }
-
-func (s *MongoRoomStore) GetRooms(ctx context.Context, filter bson.M) ([]map[string]interface{}, error) {
+func (s *MongoRoomStore) GetRooms(ctx context.Context, hotelFilters, roomFilters bson.M, fromDate, tillDate *time.Time, page, limit int) ([]*types.GroupedRoom, error) {
 	pipeline := []bson.M{
-		{"$match": filter},
-		{"$group": bson.M{
-			"_id": "$name",
-			"rooms": bson.M{
-				"$push": "$$ROOT",
+		{"$lookup": bson.M{
+			"from":         "hotels",
+			"localField":   "hotelID",
+			"foreignField": "_id",
+			"as":           "hotel",
+		}},
+		{"$unwind": "$hotel"},
+		{"$match": hotelFilters},
+		{"$lookup": bson.M{
+			"from":         "bookings",
+			"localField":   "_id",
+			"foreignField": "roomID",
+			"as":           "bookings",
+		}},
+		{"$unwind": bson.M{
+			"path":                       "$bookings",
+			"preserveNullAndEmptyArrays": true,
+		}},
+	}
+
+	// Add date range filter
+	pipeline = append(pipeline, bson.M{
+		"$match": bson.M{
+			"$or": []bson.M{
+				{"bookings": bson.M{"$exists": false}},
+				{"bookings.canceled": true},
+				{"bookings.fromDate": bson.M{"$gte": *tillDate}},
+				{"bookings.tillDate": bson.M{"$lte": *fromDate}},
 			},
+		},
+	})
+
+	// Add room filters
+	if len(roomFilters) > 0 {
+		pipeline = append(pipeline, bson.M{"$match": roomFilters})
+	}
+
+	pipeline = append(pipeline, bson.M{
+		"$group": bson.M{
+			"_id":         "$name",
+			"name":        bson.M{"$first": "$name"},
+			"description": bson.M{"$first": "$description"},
+			"price":       bson.M{"$first": "$price"},
+			"capacity":    bson.M{"$first": "$capacity"},
+			"amenities":   bson.M{"$first": "$amenities"},
+			"images":      bson.M{"$first": "$images"},
+			"bedType":     bson.M{"$first": "$bedType"},
+			"bedrooms":    bson.M{"$first": "$bedrooms"},
 			"availableCount": bson.M{
 				"$sum": bson.M{
 					"$cond": []interface{}{"$available", 1, 0},
 				},
 			},
-		}},
-	}
+		},
+	})
+
+	// Add pagination
+	pipeline = append(pipeline, bson.M{"$skip": (page - 1) * limit})
+	pipeline = append(pipeline, bson.M{"$limit": limit})
+
+	// Project to exclude _id and include hotel name
+	pipeline = append(pipeline, bson.M{
+		"$project": bson.M{
+			"_id":            0,
+			"name":           1,
+			"description":    1,
+			"price":          1,
+			"capacity":       1,
+			"amenities":      1,
+			"images":         1,
+			"bedType":        1,
+			"bedrooms":       1,
+			"availableCount": 1,
+			"hotelName":      "$hotel.name",
+		},
+	})
 
 	cursor, err := s.coll.Aggregate(ctx, pipeline)
 	if err != nil {
@@ -68,36 +120,12 @@ func (s *MongoRoomStore) GetRooms(ctx context.Context, filter bson.M) ([]map[str
 	}
 	defer cursor.Close(ctx)
 
-	var results []struct {
-		ID             string        `bson:"_id"`
-		Rooms          []*types.Room `bson:"rooms"`
-		AvailableCount int           `bson:"availableCount"`
-	}
-
+	var results []*types.GroupedRoom
 	if err := cursor.All(ctx, &results); err != nil {
 		return nil, err
 	}
 
-	var aggregatedResults []map[string]interface{}
-	for _, result := range results {
-		if len(result.Rooms) > 0 {
-			room := result.Rooms[0]
-			aggregatedResults = append(aggregatedResults, map[string]interface{}{
-				"name":           room.Name,
-				"description":    room.Description,
-				"price":          room.Price,
-				"capacity":       room.Capacity,
-				"amenities":      room.Amenities,
-				"images":         room.Images,
-				"bedType":        room.BedType,
-				"bedrooms":       room.Bedrooms,
-				"availableCount": result.AvailableCount,
-				"hotelID":        room.HotelID,
-			})
-		}
-	}
-
-	return aggregatedResults, nil
+	return results, nil
 }
 
 func (s *MongoRoomStore) InsertRoom(ctx context.Context, room *types.Room) (*types.Room, error) {
