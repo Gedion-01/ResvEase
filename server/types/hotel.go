@@ -26,3 +26,15 @@ type Room struct {
 	Available   bool               `bson:"available" json:"available"`
 	HotelID     primitive.ObjectID `bson:"hotelID" json:"hotelID"`
 }
+
+type GroupedRoom struct {
+	Name           string   `json:"name"`
+	Description    string   `json:"description"`
+	Price          int      `json:"price"`
+	Capacity       int      `json:"capacity"`
+	BedType        string   `json:"bedType"`
+	Bedrooms       int      `json:"bedrooms"`
+	AvailableCount int      `json:"availableCount"`
+	Amenities      []string `json:"amenities"`
+	Images         []string `json:"images"`
+}

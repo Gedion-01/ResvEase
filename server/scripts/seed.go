@@ -120,9 +120,10 @@ func main() {
 		nil,
 	)
 
+	var addedRooms []types.Room
 	for _, roomType := range roomTypes {
 		for i := 0; i < 4; i++ {
-			fixtures.AddRoom(
+			room := fixtures.AddRoom(
 				store,
 				roomType.Name,
 				roomType.Description,
@@ -135,11 +136,11 @@ func main() {
 				true,
 				hotel.ID,
 			)
+			addedRooms = append(addedRooms, *room)
 		}
 	}
 
-	// room := fixtures.AddRoom(store, "large", true, 99.44, hotel.ID)
-	booking := fixtures.AddBooking(store, user.ID, roomTypes[0].ID, time.Now(), time.Now().AddDate(0, 0, 3))
+	booking := fixtures.AddBooking(store, user.ID, addedRooms[0].ID, time.Now(), time.Now().AddDate(0, 0, 2))
 	fmt.Println("booking ->", booking.ID)
 
 	// for i := 0; i < 100; i++ {
