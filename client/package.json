@@ -13,6 +13,7 @@
   "dependencies": {
     "@tanstack/vue-query": "^5.62.9",
     "@vueuse/core": "^12.2.0",
+    "axios": "^1.7.9",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",

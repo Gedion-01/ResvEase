@@ -8,6 +8,7 @@ import (
 	"os"
 
 	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/cors"
 	"github.com/joho/godotenv"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
@@ -47,6 +48,7 @@ func main() {
 		apiv1          = app.Group("/api/v1")
 		admin          = apiv1.Group("/admin")
 	)
+	app.Use(cors.New())
 	// auth
 	auth.Post("/auth", authHandler.HandleAuthenticate)
 

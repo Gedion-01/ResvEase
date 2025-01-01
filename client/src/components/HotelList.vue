@@ -1,5 +1,7 @@
 <script setup lang="ts">
+import { useHotels } from "@/services/queries";
 import HotelCard from "./HotelCard.vue";
+
 // This would typically come from an API or database
 const mockHotels = [
   {
@@ -63,8 +65,12 @@ const mockHotels = [
     bedrooms: 4,
   },
 ];
+
+const hotel = useHotels();
+const data = hotel.data;
 </script>
 <template>
+  {{ data }}
   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     <HotelCard v-for="hotel in mockHotels" :key="hotel.id" :hotel="hotel" />
   </div>

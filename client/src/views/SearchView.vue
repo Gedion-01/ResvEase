@@ -7,8 +7,6 @@ import HotelList from "@/components/HotelList.vue";
 const searchSection = ref<HTMLElement | null>(null);
 const isSticky = ref(false);
 
-console.log(isSticky);
-
 const handleScroll = () => {
   if (!searchSection.value) return;
 
