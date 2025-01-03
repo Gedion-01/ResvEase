@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, defineProps } from "vue";
+import { ref, defineProps, reactive } from "vue";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,7 @@ import {
   ChevronLeft,
   ChevronRight,
 } from "lucide-vue-next";
+import { useRooms } from "@/services/queries";
 
 interface RoomType {
   id: string;
@@ -25,79 +26,26 @@ interface RoomType {
   images: string[];
 }
 
-interface RoomSelectionProps {
-  hotelId: string;
-  onRoomSelect: (roomId: string) => void;
-}
-
-defineProps<{
+const props = defineProps<{
   hotelId: string;
   onRoomSelect: (roomId: string) => void;
 }>();
 
-const selectedRoom = ref("");
+const { data, isLoading } = useRooms(props.hotelId);
+
+const selectedRoom = ref<string>("");
 const currentImageIndex = ref<{ [key: string]: number }>({});
 
-// This would typically come from an API based on the hotelId
-const roomTypes: RoomType[] = [
-  {
-    id: "1",
-    name: "Deluxe Room",
-    description: "Spacious room with city view",
-    price: 200,
-    capacity: 2,
-    amenities: ["Free Wi-Fi", "Breakfast Included", "Room Service"],
-    available: 5,
-    images: ["/room1-1.jpg", "/room1-2.jpg", "/room1-3.jpg"].map(
-      (img) => `/placeholder.svg?text=${img}`
-    ),
-  },
-  {
-    id: "2",
-    name: "Executive Suite",
-    description: "Luxury suite with separate living area",
-    price: 350,
-    capacity: 3,
-    amenities: ["Free Wi-Fi", "Breakfast Included", "Room Service", "Mini Bar"],
-    available: 3,
-    images: ["/room2-1.jpg", "/room2-2.jpg", "/room2-3.jpg"].map(
-      (img) => `/placeholder.svg?text=${img}`
-    ),
-  },
-  {
-    id: "3",
-    name: "Family Room",
-    description: "Perfect for families with children",
-    price: 400,
-    capacity: 4,
-    amenities: [
-      "Free Wi-Fi",
-      "Breakfast Included",
-      "Room Service",
-      "Kids Area",
-    ],
-    available: 2,
-    images: ["/room3-1.jpg", "/room3-2.jpg", "/room3-3.jpg"].map(
-      (img) => `/placeholder.svg?text=${img}`
-    ),
-  },
-];
-
 const handleImageNavigation = (roomId: string, direction: "prev" | "next") => {
-  const room = roomTypes.find((r) => r.id === roomId);
+  const currentIndex = currentImageIndex.value[roomId] || 0;
+  const room = data.value?.data.find((room) => room.id === roomId);
   if (!room) return;
 
-  if (!room || !room.images || room.images.length === 0) return;
-
-  const currentIndex = currentImageIndex.value[roomId] || 0;
   const newIndex =
     (currentIndex + (direction === "next" ? 1 : -1) + room.images.length) %
     room.images.length;
 
-  currentImageIndex.value = {
-    ...currentImageIndex.value,
-    [roomId]: newIndex,
-  };
+  currentImageIndex.value[roomId] = newIndex;
 };
 
 type Amenity = "Free Wi-Fi" | "Breakfast Included" | "Room Service" | string;
@@ -105,15 +53,6 @@ type Amenity = "Free Wi-Fi" | "Breakfast Included" | "Room Service" | string;
 interface Room {
   amenities: Amenity[];
 }
-
-const room: Room = {
-  amenities: [
-    "Free Wi-Fi",
-    "Breakfast Included",
-    "Room Service",
-    "Other Amenity",
-  ],
-};
 
 const getAmenityIcon = (amenity: Amenity) => {
   switch (amenity) {
@@ -128,11 +67,12 @@ const getAmenityIcon = (amenity: Amenity) => {
   }
 };
 </script>
+
 <template>
   <div class="space-y-6">
     <h2 class="text-2xl font-bold">Select Your Room</h2>
     <Card
-      v-for="room in roomTypes"
+      v-for="room in data?.data"
       :key="room.id"
       :class="[
         'cursor-pointer transition-colors',
@@ -147,8 +87,10 @@ const getAmenityIcon = (amenity: Amenity) => {
               {{ room.description }}
             </p>
           </div>
-          <Badge :variant="room.available < 3 ? 'destructive' : 'secondary'">
-            {{ room.available }} rooms left
+          <Badge
+            :variant="room.availableCount < 3 ? 'destructive' : 'secondary'"
+          >
+            {{ room.availableCount }} rooms left
           </Badge>
         </div>
       </CardHeader>
@@ -161,9 +103,8 @@ const getAmenityIcon = (amenity: Amenity) => {
                   <img
                     :src="room.images[currentImageIndex[room.id] || 0]"
                     :alt="`${room.name} view ${
-                      currentImageIndex[room.id] || 1
+                      currentImageIndex[room.id] + 1 || 1
                     }`"
-                    fill
                     class="object-cover rounded-lg"
                   />
                   <div
@@ -173,12 +114,7 @@ const getAmenityIcon = (amenity: Amenity) => {
                       variant="secondary"
                       size="icon"
                       class="opacity-80 hover:opacity-100"
-                      @click="
-                        (e) => {
-                          e.stopPropagation();
-                          handleImageNavigation(room.id, 'prev');
-                        }
-                      "
+                      @click.stop="handleImageNavigation(room.id, 'prev')"
                     >
                       <ChevronLeft class="h-4 w-4" />
                     </Button>
@@ -186,12 +122,7 @@ const getAmenityIcon = (amenity: Amenity) => {
                       variant="secondary"
                       size="icon"
                       class="opacity-80 hover:opacity-100"
-                      @click="
-                        (e) => {
-                          e.stopPropagation();
-                          handleImageNavigation(room.id, 'next');
-                        }
-                      "
+                      @click.stop="handleImageNavigation(room.id, 'next')"
                     >
                       <ChevronRight class="h-4 w-4" />
                     </Button>
@@ -201,12 +132,11 @@ const getAmenityIcon = (amenity: Amenity) => {
               <DialogContent class="max-w-4xl">
                 <div class="grid gap-4">
                   <div class="relative aspect-video">
-                    <Image
+                    <img
                       :src="room.images[currentImageIndex[room.id] || 0]"
                       :alt="`${room.name} view ${
-                        currentImageIndex[room.id] || 1
+                        currentImageIndex[room.id] + 1 || 1
                       }`"
-                      fill
                       class="object-contain"
                     />
                   </div>
@@ -220,18 +150,11 @@ const getAmenityIcon = (amenity: Amenity) => {
                           ? 'ring-2 ring-primary'
                           : '',
                       ]"
-                      @click="
-                        () =>
-                          (currentImageIndex = {
-                            ...currentImageIndex,
-                            [room.id]: index,
-                          })
-                      "
+                      @click="currentImageIndex[room.id] = index"
                     >
-                      <Image
+                      <img
                         :src="roomImg"
                         :alt="`${room.name} view ${index + 1}`"
-                        fill
                         class="object-cover rounded"
                       />
                     </div>
@@ -271,7 +194,7 @@ const getAmenityIcon = (amenity: Amenity) => {
                 @click="
                   () => {
                     selectedRoom = room.id;
-                    onRoomSelect(room.id);
+                    props.onRoomSelect(room.id);
                   }
                 "
                 :variant="selectedRoom === room.id ? 'default' : 'outline'"

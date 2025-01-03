@@ -13,7 +13,7 @@ const router = createRouter({
     },
     {
       path: "/search",
-      name: "Search",
+      name: "SearchResults",
       component: SearchVue,
     },
     {

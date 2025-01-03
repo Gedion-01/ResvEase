@@ -3,20 +3,10 @@ import { MapPin, Star, Bed } from "lucide-vue-next";
 import { Button } from "@/components/ui/button";
 import { RouterLink } from "vue-router";
 import { Badge } from "@/components/ui/badge";
-
-interface HotelProps {
-  id: string;
-  name: string;
-  image: string;
-  rating: number;
-  prices: number[];
-  location: string;
-  bedTypes: string[];
-  bedrooms: number;
-}
+import type { Hotel } from "@/types/hotel";
 
 defineProps<{
-  hotel: HotelProps;
+  hotel: Hotel;
 }>();
 
 const testArray = [1, 2, 3, 4, 5];
@@ -27,7 +17,7 @@ const testArray = [1, 2, 3, 4, 5];
   >
     <div class="relative h-48">
       <img
-        :src="hotel.image"
+        :src="hotel.images[0]"
         :alt="hotel.name"
         width="400"
         height="200"
@@ -67,6 +57,7 @@ const testArray = [1, 2, 3, 4, 5];
           >From ${{ Math.min(...hotel.prices) }}</span
         >
       </div>
+      <!--
       <div class="flex items-center gap-2 mb-4">
         <Badge variant="secondary" class="flex items-center">
           <Bed class="h-3 w-3 mr-1" />
@@ -77,6 +68,7 @@ const testArray = [1, 2, 3, 4, 5];
           {{ hotel.bedTypes.join(", ") }}
         </Badge>
       </div>
+      -->
       <RouterLink :to="`/hotel/${hotel.id}`">
         <Button class="w-full">View Details</Button>
       </RouterLink>

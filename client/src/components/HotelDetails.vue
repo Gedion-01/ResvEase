@@ -36,7 +36,6 @@ interface HotelProps {
   name: string;
   images: string[];
   rating: number;
-  price: number;
   location: string;
   description: string;
   amenities: string[];

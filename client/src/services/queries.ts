@@ -1,9 +1,23 @@
 import { useQuery } from "@tanstack/vue-query";
-import { getHotels } from "./api";
+import { getHotel, getHotels, getRooms } from "./api";
+
+export function useHotel(hotelId: string) {
+  return useQuery({
+    queryKey: ["hotel", hotelId],
+    queryFn: () => getHotel(hotelId),
+  });
+}
 
 export function useHotels() {
   return useQuery({
     queryKey: ["hotels"],
     queryFn: getHotels,
+  });
+}
+
+export function useRooms(hotelId: string) {
+  return useQuery({
+    queryKey: ["rooms", hotelId],
+    queryFn: () => getRooms(hotelId),
   });
 }

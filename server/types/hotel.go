@@ -29,13 +29,14 @@ type Room struct {
 }
 
 type GroupedRoom struct {
-	Name           string   `json:"name"`
-	Description    string   `json:"description"`
-	Price          int      `json:"price"`
-	Capacity       int      `json:"capacity"`
-	BedType        string   `json:"bedType"`
-	Bedrooms       int      `json:"bedrooms"`
-	AvailableCount int      `json:"availableCount"`
-	Amenities      []string `json:"amenities"`
-	Images         []string `json:"images"`
+	ID             primitive.ObjectID `json:"id"`
+	Name           string             `json:"name"`
+	Description    string             `json:"description"`
+	Price          int                `json:"price"`
+	Capacity       int                `json:"capacity"`
+	BedType        string             `json:"bedType"`
+	Bedrooms       int                `json:"bedrooms"`
+	AvailableCount int                `json:"availableCount"`
+	Amenities      []string           `json:"amenities"`
+	Images         []string           `json:"images"`
 }

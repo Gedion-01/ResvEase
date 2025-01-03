@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import HotelDetails from "@/components/HotelDetails.vue";
 import RoomSelection from "@/components/RoomSelection.vue";
+import { useHotel, useRooms } from "@/services/queries";
 import { useRoute } from "vue-router";
 
 // Define the type for the route parameters
@@ -12,6 +13,7 @@ const route = useRoute();
 
 // Access the parameter and cast it to the type
 const id = route.params.id as RouteParams["id"];
+console.log(id);
 
 // This would typically come from an API or database
 // const mockHotel = {
@@ -55,13 +57,17 @@ const mockHotel = {
     "Beach Access",
   ],
 };
+
+// const { data, isLoading } = useRooms(id);
+const { data, isLoading } = useHotel(id);
 </script>
 
 <template>
+  <!-- {{ data?.data }} -->
   <div class="container mx-auto px-4 py-8">
     <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-      <div class="md:col-span-2">
-        <HotelDetails :hotel="mockHotel" />
+      <div class="md:col-span-2" v-if="data">
+        <HotelDetails :hotel="data" />
         <div class="mt-8">
           <RoomSelection
             :hotelId="id"

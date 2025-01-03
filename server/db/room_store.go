@@ -77,6 +77,7 @@ func (s *MongoRoomStore) GetRooms(ctx context.Context, hotelFilters, roomFilters
 	pipeline = append(pipeline, bson.M{
 		"$group": bson.M{
 			"_id":         "$name",
+			"id":          bson.M{"$first": "$_id"},
 			"name":        bson.M{"$first": "$name"},
 			"description": bson.M{"$first": "$description"},
 			"price":       bson.M{"$first": "$price"},
@@ -101,6 +102,7 @@ func (s *MongoRoomStore) GetRooms(ctx context.Context, hotelFilters, roomFilters
 	pipeline = append(pipeline, bson.M{
 		"$project": bson.M{
 			"_id":            0,
+			"id":             1,
 			"name":           1,
 			"description":    1,
 			"price":          1,

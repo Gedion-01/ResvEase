@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useRouter } from "vue-router";
 import type { DateRange } from "radix-vue";
 import { RangeCalendar } from "@/components/ui/range-calendar";
 import { getLocalTimeZone } from "@internationalized/date";
@@ -22,6 +23,8 @@ defineProps({
     Required: true,
   },
 });
+
+const router = useRouter();
 
 const location = ref("");
 const guests = reactive({
@@ -86,6 +89,21 @@ const quickFilters = [
   "Pet friendly",
   "5-star hotels",
 ];
+
+const handleSearch = () => {
+  const query = {
+    location: location.value,
+    checkIn: value?.value.start
+      ? value.value.start.toDate(timeZone).toISOString().split("T")[0]
+      : new Date().toISOString().split("T")[0],
+    checkOut: value?.value.end
+      ? value.value.end.toDate(timeZone).toISOString().split("T")[0]
+      : null,
+    adults: guests.adults.toString(),
+    children: guests.children.toString(),
+  };
+  router.push({ name: "SearchResults", query });
+};
 </script>
 
 <template>
@@ -104,6 +122,7 @@ const quickFilters = [
             Destination
           </div>
           <Input
+            v-model="location"
             type="text"
             placeholder="City, airport, region, landmark or property name"
             className="w-full px-4 pt-7 pb-1 h-auto border rounded-md font-medium placeholder:text-sm"
@@ -248,7 +267,10 @@ const quickFilters = [
       </div>
 
       <div class="md:col-span-2">
-        <Button class="w-full h-full bg-primary hover:bg-primary/90">
+        <Button
+          class="w-full h-full bg-primary hover:bg-primary/90"
+          @click="handleSearch"
+        >
           <Search class="" />
           Search
         </Button>
