@@ -11,6 +11,7 @@ type Hotel struct {
 	Rating      float64              `bson:"rating" json:"rating"`
 	Amenities   []string             `bson:"amenities" json:"amenities"`
 	Rooms       []primitive.ObjectID `bson:"rooms" json:"rooms"`
+	Prices      []float64            `bson:"prices" json:"prices"`
 }
 
 type Room struct {

@@ -2,13 +2,13 @@ package db
 
 import (
 	"context"
+	"fmt"
 	"hotel-reservation/types"
 	"os"
 
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type HotelStore interface {
@@ -43,18 +43,67 @@ func (s *MongoHotelStore) GetHotelByID(ctx context.Context, id string) (*types.H
 	return hotel, nil
 }
 
+// func (s *MongoHotelStore) GetHotels(ctx context.Context, filter Map, page *Pagination) ([]*types.Hotel, error) {
+// 	opts := options.FindOptions{}
+// 	opts.SetSkip((page.Page - 1) * page.Limit)
+// 	opts.SetLimit(page.Limit)
+// 	resp, err := s.coll.Find(ctx, filter, &opts)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	var hotels []*types.Hotel
+// 	if err := resp.All(ctx, &hotels); err != nil {
+// 		return nil, err
+// 	}
+// 	return hotels, nil
+// }
+
 func (s *MongoHotelStore) GetHotels(ctx context.Context, filter Map, page *Pagination) ([]*types.Hotel, error) {
-	opts := options.FindOptions{}
-	opts.SetSkip((page.Page - 1) * page.Limit)
-	opts.SetLimit(page.Limit)
-	resp, err := s.coll.Find(ctx, filter, &opts)
+	pipeline := []bson.M{
+		{"$match": filter},
+		{"$lookup": bson.M{
+			"from":         "rooms",
+			"localField":   "_id",
+			"foreignField": "hotelID",
+			"as":           "rooms",
+		}},
+		{"$addFields": bson.M{
+			"prices": bson.M{
+				"$reduce": bson.M{
+					"input":        "$rooms.price",
+					"initialValue": []interface{}{},
+					"in": bson.M{
+						"$cond": bson.M{
+							"if":   bson.M{"$in": []interface{}{"$$this", "$$value"}},
+							"then": "$$value",
+							"else": bson.M{"$concatArrays": []interface{}{"$$value", []interface{}{"$$this"}}},
+						},
+					},
+				},
+			},
+		}},
+		{"$project": bson.M{
+			"rooms": 0,
+		}},
+		{"$skip": (page.Page - 1) * page.Limit},
+		{"$limit": page.Limit},
+	}
+
+	cursor, err := s.coll.Aggregate(ctx, pipeline)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("aggregation error: %v", err)
 	}
+	defer cursor.Close(ctx)
+
 	var hotels []*types.Hotel
-	if err := resp.All(ctx, &hotels); err != nil {
-		return nil, err
+	if err := cursor.All(ctx, &hotels); err != nil {
+		return nil, fmt.Errorf("cursor error: %v", err)
 	}
+
+	if len(hotels) == 0 {
+		return nil, fmt.Errorf("hotel resource not found")
+	}
+
 	return hotels, nil
 }
 
