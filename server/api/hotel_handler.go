@@ -32,8 +32,8 @@ type HotelRoomParams struct {
 	RoomAmenities  string  `json:"roomAmenities"`
 	RoomBedType    string  `json:"roomBedType"`
 	RoomBedrooms   string  `json:"roomBedrooms"`
-	FromDate       string  `json:"fromDate"`
-	TillDate       string  `json:"tillDate"`
+	CheckIn        string  `json:"checkIn"`
+	CheckOut       string  `json:"checkOut"`
 }
 
 func (h *HotelHandler) HandleGetRooms(c *fiber.Ctx) error {
@@ -54,13 +54,13 @@ func (h *HotelHandler) HandleGetRooms(c *fiber.Ctx) error {
 		return ErrBadRequest()
 	}
 
-	fromDateStr := params.FromDate
-	tillDateStr := params.TillDate
+	fromDateStr := params.CheckIn
+	tillDateStr := params.CheckOut
 
 	if fromDateStr == "" || tillDateStr == "" {
 		return c.Status(http.StatusBadRequest).JSON(genericResp{
 			Type: "error",
-			Msg:  "fromDate and tillDate are required",
+			Msg:  "checkIn and checkOut are required",
 		})
 	}
 
