@@ -63,7 +63,9 @@ func (h *HotelHandler) HandleGetRooms(c *fiber.Ctx) error {
 			Msg:  "fromDate and tillDate are required",
 		})
 	}
-	fromDate, err := time.Parse(time.RFC3339, fromDateStr)
+
+	const dateFormat = "2006-01-02"
+	fromDate, err := time.Parse(dateFormat, fromDateStr)
 	if err != nil {
 		return c.Status(http.StatusBadRequest).JSON(genericResp{
 			Type: "error",
@@ -71,7 +73,7 @@ func (h *HotelHandler) HandleGetRooms(c *fiber.Ctx) error {
 		})
 	}
 
-	tillDate, err := time.Parse(time.RFC3339, tillDateStr)
+	tillDate, err := time.Parse(dateFormat, tillDateStr)
 	if err != nil {
 		return c.Status(http.StatusBadRequest).JSON(genericResp{
 			Type: "error",
