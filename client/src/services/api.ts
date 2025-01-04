@@ -21,9 +21,15 @@ export const getHotels = async () => {
   return response.data;
 };
 
-export const getRooms = async (hotelId: string) => {
+export const getRooms = async (
+  hotelId: string,
+  queryParams: Record<string, any>
+) => {
+  const queryString = new URLSearchParams(queryParams).toString();
+  console.log(queryString);
   const response = await axiosInstance.get<RoomResponse>(
-    `/hotel/${hotelId}/rooms?fromDate=2025-01-01T00:00:00Z&tillDate=2025-01-05T00:00:00Z&page=1&limit=10&hotelRating=4.8&RoomCapacity=2`
+    `/hotel/${hotelId}/rooms?${queryString}`
   );
   return response.data;
 };
+// `/hotel/${hotelId}/rooms?checkIn=2025-01-01&checkOut=2025-01-05&page=1&limit=10&hotelRating=4.8&RoomCapacity=2`;

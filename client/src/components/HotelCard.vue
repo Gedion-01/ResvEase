@@ -4,10 +4,25 @@ import { Button } from "@/components/ui/button";
 import { RouterLink } from "vue-router";
 import { Badge } from "@/components/ui/badge";
 import type { Hotel } from "@/types/hotel";
+import { useSearchStore } from "@/store/searchStore";
 
 defineProps<{
   hotel: Hotel;
 }>();
+
+const searchStore = useSearchStore();
+
+searchStore.loadSearchParams();
+
+const queryParams = {
+  location: searchStore.location,
+  checkIn: searchStore.checkIn,
+  checkOut: searchStore.checkOut,
+  adults: searchStore.adults.toString(),
+  children: searchStore.children.toString(),
+};
+
+const queryString = new URLSearchParams(queryParams).toString();
 
 const testArray = [1, 2, 3, 4, 5];
 </script>
@@ -69,7 +84,7 @@ const testArray = [1, 2, 3, 4, 5];
         </Badge>
       </div>
       -->
-      <RouterLink :to="`/hotel/${hotel.id}`">
+      <RouterLink :to="`/hotel/${hotel.id}/rooms?${queryString}`">
         <Button class="w-full">View Details</Button>
       </RouterLink>
     </div>

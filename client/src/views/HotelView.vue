@@ -1,7 +1,9 @@
 <script setup lang="ts">
 import HotelDetails from "@/components/HotelDetails.vue";
 import RoomSelection from "@/components/RoomSelection.vue";
+import SearchSection from "@/components/SearchSection.vue";
 import { useHotel, useRooms } from "@/services/queries";
+import { onMounted, onUnmounted, ref } from "vue";
 import { useRoute } from "vue-router";
 
 // Define the type for the route parameters
@@ -15,57 +17,41 @@ const route = useRoute();
 const id = route.params.id as RouteParams["id"];
 console.log(id);
 
-// This would typically come from an API or database
-// const mockHotel = {
-//   id: "1",
-//   name: "Luxury Resort & Spa",
-//   images: ["/hotel1.jpg", "/hotel2.jpg", "/hotel3.jpg"],
-//   rating: 4.5,
-//   price: 250,
-//   location: "Maldives",
-//   description:
-//     "Experience luxury and relaxation in our beachfront resort. Enjoy stunning ocean views, world-class amenities, and impeccable service.",
-//   amenities: [
-//     "Free Wi-Fi",
-//     "Swimming Pool",
-//     "Spa",
-//     "Restaurant",
-//     "Fitness Center",
-//     "Beach Access",
-//   ],
-// };
+const searchSection = ref<HTMLElement | null>(null);
+const isSticky = ref(false);
 
-const mockHotel = {
-  id: "1",
-  name: "Luxury Resort & Spa",
-  images: [
-    "https://plus.unsplash.com/premium_photo-1661929519129-7a76946c1d38?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    "https://images.unsplash.com/photo-1561501900-3701fa6a0864?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-    "https://images.unsplash.com/photo-1583037189850-1921ae7c6c22?q=80&w=1975&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D",
-  ],
-  rating: 4.5,
-  price: 250,
-  location: "Maldives",
-  description:
-    "Experience luxury and relaxation in our beachfront resort. Enjoy stunning ocean views, world-class amenities, and impeccable service.",
-  amenities: [
-    "Free Wi-Fi",
-    "Swimming Pool",
-    "Spa",
-    "Restaurant",
-    "Fitness Center",
-    "Beach Access",
-  ],
+const handleScroll = () => {
+  if (!searchSection.value) return;
+
+  const rect = searchSection.value.getBoundingClientRect();
+  isSticky.value = rect.top <= 0;
 };
 
-// const { data, isLoading } = useRooms(id);
+onMounted(() => {
+  window.addEventListener("scroll", handleScroll);
+});
+
+onUnmounted(() => {
+  window.removeEventListener("scroll", handleScroll);
+});
+
 const { data, isLoading } = useHotel(id);
 </script>
 
 <template>
-  <!-- {{ data?.data }} -->
-  <div class="container mx-auto px-4 py-8">
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+  <div class="">
+    <div
+      ref="searchSection"
+      :class="[
+        'sticky top-0 z-20 pb-4 transition-all ease-in-out duration-200 ',
+        isSticky ? '' : 'container',
+      ]"
+    >
+      <SearchSection :is-sticky="isSticky" />
+    </div>
+    <div
+      class="container mx-auto px-4 py-8 grid grid-cols-1 md:grid-cols-3 gap-8"
+    >
       <div class="md:col-span-2" v-if="data">
         <HotelDetails :hotel="data" />
         <div class="mt-8">

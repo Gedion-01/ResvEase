@@ -17,7 +17,7 @@ const router = createRouter({
       component: SearchVue,
     },
     {
-      path: "/hotel/:id",
+      path: "/hotel/:id/rooms",
       name: "Hotel",
       component: HotelView,
     },

@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { useRouter } from "vue-router";
+import { useRoute, useRouter, type RouteParams } from "vue-router";
 import type { DateRange } from "radix-vue";
 import { RangeCalendar } from "@/components/ui/range-calendar";
 import { getLocalTimeZone, parseDate } from "@internationalized/date";
-import { type Ref, ref, computed, reactive } from "vue";
+import { type Ref, ref, computed, reactive, nextTick } from "vue";
 import { useSearchStore } from "@/store/searchStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/popover";
 import { Search } from "lucide-vue-next";
 import { addDays, format } from "date-fns";
+import { useQueryClient } from "@tanstack/vue-query";
 
 const searchStore = useSearchStore();
 searchStore.loadSearchParams();
@@ -29,6 +30,8 @@ defineProps({
 });
 
 const router = useRouter();
+const route = useRoute();
+const queryClient = useQueryClient();
 
 const location = ref(searchStore.location);
 const guests = reactive({
@@ -98,7 +101,9 @@ const quickFilters = [
   "5-star hotels",
 ];
 
-const handleSearch = () => {
+// i need a function that checks searchStore.location === location if its true return true
+
+const handleSearch = async () => {
   console.log("Search", location.value, value.value, guests);
   const query = {
     location: location.value,
@@ -110,6 +115,7 @@ const handleSearch = () => {
       : format(addDays(new Date(), 1), "yyyy-MM-dd"),
     adults: guests.adults.toString(),
     children: guests.children.toString(),
+    roomCapacity: guests.adults + guests.children,
   };
   searchStore.setSearchParams({
     location: location.value,
@@ -118,7 +124,20 @@ const handleSearch = () => {
     adults: guests.adults,
     children: guests.children,
   });
-  router.replace({ name: "SearchResults", query });
+
+  await nextTick();
+
+  if (route.name === "Hotel") {
+    // Update the query parameters without navigating
+    router.replace({ query });
+
+    const id = route.params.id as string;
+    console.log(id, query);
+    queryClient.invalidateQueries({ queryKey: ["rooms", id, query] });
+  } else {
+    // Navigate to the search results page
+    router.replace({ name: "SearchResults", query });
+  }
 };
 </script>
 
@@ -288,11 +307,14 @@ const handleSearch = () => {
           @click="handleSearch"
         >
           <Search class="" />
-          Search
+          {{ route.name === "Hotel" ? "Update" : "Search" }}
         </Button>
       </div>
     </div>
-    <div class="mt-4 flex items-center justify-between container">
+    <div
+      v-if="route.fullPath == '/' || route.fullPath.includes('/search')"
+      class="mt-4 flex items-center justify-between container"
+    >
       <div class="flex gap-2 overflow-x-auto pb-2">
         <Badge
           v-for="filter in quickFilters"

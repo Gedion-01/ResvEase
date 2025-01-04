@@ -15,9 +15,10 @@ export function useHotels() {
   });
 }
 
-export function useRooms(hotelId: string) {
+export function useRooms(hotelId: string, queryParams: Record<string, any>) {
   return useQuery({
-    queryKey: ["rooms", hotelId],
-    queryFn: () => getRooms(hotelId),
+    queryKey: ["rooms", hotelId, queryParams],
+    queryFn: () => getRooms(hotelId, queryParams),
+    staleTime: 0,
   });
 }

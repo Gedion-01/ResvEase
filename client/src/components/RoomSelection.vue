@@ -14,6 +14,7 @@ import {
   ChevronRight,
 } from "lucide-vue-next";
 import { useRooms } from "@/services/queries";
+import { useRoute } from "vue-router";
 
 interface RoomType {
   id: string;
@@ -31,7 +32,20 @@ const props = defineProps<{
   onRoomSelect: (roomId: string) => void;
 }>();
 
-const { data, isLoading } = useRooms(props.hotelId);
+const route = useRoute();
+const queryParams = {
+  location: route.query.location as string,
+  checkIn: route.query.checkIn as string,
+  checkOut: route.query.checkOut as string,
+  adults: route.query.adults as string,
+  children: route.query.children as string,
+  roomCapacity: (
+    parseInt(route.query.adults as string, 10) +
+    parseInt(route.query.children as string, 10)
+  ).toString(),
+};
+
+const { data, isLoading } = useRooms(props.hotelId, queryParams);
 
 const selectedRoom = ref<string>("");
 const currentImageIndex = ref<{ [key: string]: number }>({});

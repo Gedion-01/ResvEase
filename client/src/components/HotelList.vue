@@ -1,6 +1,26 @@
 <script setup lang="ts">
 import { useHotels } from "@/services/queries";
 import HotelCard from "./HotelCard.vue";
+import { useRoute, useRouter } from "vue-router";
+import { useSearchStore } from "@/store/searchStore";
+
+const route = useRoute();
+const router = useRouter();
+const searchStore = useSearchStore();
+
+searchStore.loadSearchParams();
+
+const queryParams = {
+  location: searchStore.location,
+  checkIn: searchStore.checkIn,
+  checkOut: searchStore.checkOut,
+  adults: searchStore.adults.toString(),
+  children: searchStore.children.toString(),
+};
+
+if (JSON.stringify(route.query) !== JSON.stringify(queryParams)) {
+  router.replace({ query: queryParams });
+}
 
 const { isLoading, data, isError } = useHotels();
 </script>
