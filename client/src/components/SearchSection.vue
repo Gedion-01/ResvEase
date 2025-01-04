@@ -2,8 +2,9 @@
 import { useRouter } from "vue-router";
 import type { DateRange } from "radix-vue";
 import { RangeCalendar } from "@/components/ui/range-calendar";
-import { getLocalTimeZone } from "@internationalized/date";
+import { getLocalTimeZone, parseDate } from "@internationalized/date";
 import { type Ref, ref, computed, reactive } from "vue";
+import { useSearchStore } from "@/store/searchStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +15,10 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Search } from "lucide-vue-next";
-import { format } from "date-fns";
+import { addDays, format } from "date-fns";
+
+const searchStore = useSearchStore();
+searchStore.loadSearchParams();
 
 defineProps({
   isSticky: {
@@ -26,22 +30,26 @@ defineProps({
 
 const router = useRouter();
 
-const location = ref("");
+const location = ref(searchStore.location);
 const guests = reactive({
-  adults: 2,
-  children: 0,
+  adults: searchStore.adults,
+  children: searchStore.children,
 });
 
 const viewMode = ref<"list" | "map">("list");
 
 const timeZone = getLocalTimeZone();
-const start = undefined;
-const end = undefined;
+const start = searchStore.checkIn
+  ? parseDate(searchStore.checkIn)
+  : parseDate(new Date().toISOString().split("T")[0]);
+const end = searchStore.checkOut
+  ? parseDate(searchStore.checkOut)
+  : parseDate(addDays(new Date(), 1).toISOString().split("T")[0]);
 
 const value = ref({
   start,
   end,
-}) as Ref<DateRange, DateRange> | undefined;
+}) as Ref<DateRange>;
 
 const formattedStart = computed(() => {
   if (value?.value.start) {
@@ -75,7 +83,7 @@ const incrementAdults = () => {
 };
 
 const decrementChildren = () => {
-  guests.children = Math.max(1, guests.children - 1);
+  guests.children = Math.max(0, guests.children - 1);
 };
 const incrementChildren = () => {
   guests.children++;
@@ -91,18 +99,26 @@ const quickFilters = [
 ];
 
 const handleSearch = () => {
+  console.log("Search", location.value, value.value, guests);
   const query = {
     location: location.value,
     checkIn: value?.value.start
-      ? value.value.start.toDate(timeZone).toISOString().split("T")[0]
-      : new Date().toISOString().split("T")[0],
+      ? format(value.value.start.toDate(timeZone), "yyyy-MM-dd")
+      : format(new Date(), "yyyy-MM-dd"),
     checkOut: value?.value.end
-      ? value.value.end.toDate(timeZone).toISOString().split("T")[0]
-      : null,
+      ? format(value.value.end.toDate(timeZone), "yyyy-MM-dd")
+      : format(addDays(new Date(), 1), "yyyy-MM-dd"),
     adults: guests.adults.toString(),
     children: guests.children.toString(),
   };
-  router.push({ name: "SearchResults", query });
+  searchStore.setSearchParams({
+    location: location.value,
+    checkIn: query.checkIn,
+    checkOut: query.checkOut,
+    adults: guests.adults,
+    children: guests.children,
+  });
+  router.replace({ name: "SearchResults", query });
 };
 </script>
 
