@@ -45,7 +45,7 @@ func AddRoom(store *db.Store, name string, description string, price float64, ca
 	return insertedRoom
 }
 
-func AddHotel(store *db.Store, name string, description string, images []string, location string, rating float64, amenities []string, rooms []primitive.ObjectID) *types.Hotel {
+func AddHotel(store *db.Store, name string, description string, images []string, location string, rating int, amenities []string, rooms []primitive.ObjectID) *types.Hotel {
 	var roomIDS = rooms
 	if rooms == nil {
 		roomIDS = []primitive.ObjectID{}

@@ -24,16 +24,16 @@ func NewHotelHandler(store *db.Store) *HotelHandler {
 
 type HotelRoomParams struct {
 	db.Pagination
-	Rating         float64 `json:"rating"`
-	HotelRating    string  `json:"hotelRating"`
-	HotelAmenities string  `json:"hotelAmenities"`
-	HotelLocation  string  `json:"hotelLocation"`
-	RoomCapacity   string  `json:"roomCapacity"`
-	RoomAmenities  string  `json:"roomAmenities"`
-	RoomBedType    string  `json:"roomBedType"`
-	RoomBedrooms   string  `json:"roomBedrooms"`
-	CheckIn        string  `json:"checkIn"`
-	CheckOut       string  `json:"checkOut"`
+	Rating         int    `json:"rating"`
+	HotelRating    string `json:"hotelRating"`
+	HotelAmenities string `json:"hotelAmenities"`
+	HotelLocation  string `json:"hotelLocation"`
+	RoomCapacity   string `json:"roomCapacity"`
+	RoomAmenities  string `json:"roomAmenities"`
+	RoomBedType    string `json:"roomBedType"`
+	RoomBedrooms   string `json:"roomBedrooms"`
+	CheckIn        string `json:"checkIn"`
+	CheckOut       string `json:"checkOut"`
 }
 
 func (h *HotelHandler) HandleGetRooms(c *fiber.Ctx) error {
@@ -104,7 +104,7 @@ func (h *HotelHandler) HandleGetRooms(c *fiber.Ctx) error {
 	// Build hotel filters
 	hotelFilters := bson.M{"hotelID": oid}
 	if params.HotelRating != "" {
-		rating, err := strconv.ParseFloat(params.HotelRating, 64)
+		rating, err := strconv.Atoi(params.HotelRating)
 		if err != nil {
 			return c.Status(http.StatusBadRequest).JSON(genericResp{
 				Type: "error",
@@ -178,7 +178,10 @@ type ResourceResp struct {
 
 type HotelQueryParams struct {
 	db.Pagination
-	Rating float64 `json:"rating"`
+	Rating    int     `json:"rating"`
+	Amenities string  `json:"amenities"`
+	MinPrice  float64 `json:"minPrice"`
+	MaxPrice  float64 `json:"maxPrice"`
 }
 
 func (h *HotelHandler) HandleGetHotels(c *fiber.Ctx) error {
@@ -194,7 +197,11 @@ func (h *HotelHandler) HandleGetHotels(c *fiber.Ctx) error {
 	if params.Rating != 0 {
 		filter["rating"] = params.Rating
 	}
-	hotels, err := h.store.Hotel.GetHotels(c.Context(), filter, &params.Pagination)
+	if params.Amenities != "" {
+		filter["amenities"] = bson.M{"$all": strings.Split(params.Amenities, ",")}
+	}
+
+	hotels, err := h.store.Hotel.GetHotels(c.Context(), filter, &params.Pagination, params.MinPrice, params.MaxPrice)
 	if err != nil {
 		return ErrResourceNotFound("hotel")
 	}

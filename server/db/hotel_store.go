@@ -14,7 +14,7 @@ import (
 type HotelStore interface {
 	InsertHotel(context.Context, *types.Hotel) (*types.Hotel, error)
 	Update(context.Context, Map, Map) error
-	GetHotels(context.Context, Map, *Pagination) ([]*types.Hotel, error)
+	GetHotels(context.Context, Map, *Pagination, float64, float64) ([]*types.Hotel, error)
 	GetHotelByID(context.Context, string) (*types.Hotel, error)
 }
 
@@ -43,7 +43,10 @@ func (s *MongoHotelStore) GetHotelByID(ctx context.Context, id string) (*types.H
 	return hotel, nil
 }
 
-func (s *MongoHotelStore) GetHotels(ctx context.Context, filter Map, page *Pagination) ([]*types.Hotel, error) {
+func (s *MongoHotelStore) GetHotels(ctx context.Context, filter Map, page *Pagination, minPrice, maxPrice float64) ([]*types.Hotel, error) {
+	// Log the filter
+	fmt.Printf("filter: %+v\n", filter)
+
 	pipeline := []bson.M{
 		{"$match": filter},
 		{"$lookup": bson.M{
@@ -67,12 +70,48 @@ func (s *MongoHotelStore) GetHotels(ctx context.Context, filter Map, page *Pagin
 				},
 			},
 		}},
+	}
+
+	// Add price range filter if minPrice or maxPrice is specified
+	if minPrice > 0 || maxPrice > 0 {
+		priceRangeFilter := bson.M{}
+		if minPrice > 0 {
+			priceRangeFilter["$gte"] = minPrice
+		}
+		if maxPrice > 0 {
+			priceRangeFilter["$lte"] = maxPrice
+		}
+		pipeline = append(pipeline, bson.M{
+			"$addFields": bson.M{
+				"prices": bson.M{
+					"$filter": bson.M{
+						"input": "$prices",
+						"as":    "price",
+						"cond": bson.M{"$and": []bson.M{
+							{"$gte": []interface{}{"$$price", minPrice}},
+							{"$lte": []interface{}{"$$price", maxPrice}},
+						}},
+					},
+				},
+			},
+		})
+	}
+
+	// Add a stage to exclude hotels with empty prices
+	pipeline = append(pipeline, bson.M{
+		"$match": bson.M{
+			"prices": bson.M{"$ne": []interface{}{}},
+		},
+	})
+
+	pipeline = append(pipeline, []bson.M{
 		{"$project": bson.M{
 			"rooms": 0,
+			// "prices": 0,
 		}},
 		{"$skip": (page.Page - 1) * page.Limit},
 		{"$limit": page.Limit},
-	}
+	}...)
 
 	cursor, err := s.coll.Aggregate(ctx, pipeline)
 	if err != nil {
