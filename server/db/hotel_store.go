@@ -43,21 +43,6 @@ func (s *MongoHotelStore) GetHotelByID(ctx context.Context, id string) (*types.H
 	return hotel, nil
 }
 
-// func (s *MongoHotelStore) GetHotels(ctx context.Context, filter Map, page *Pagination) ([]*types.Hotel, error) {
-// 	opts := options.FindOptions{}
-// 	opts.SetSkip((page.Page - 1) * page.Limit)
-// 	opts.SetLimit(page.Limit)
-// 	resp, err := s.coll.Find(ctx, filter, &opts)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	var hotels []*types.Hotel
-// 	if err := resp.All(ctx, &hotels); err != nil {
-// 		return nil, err
-// 	}
-// 	return hotels, nil
-// }
-
 func (s *MongoHotelStore) GetHotels(ctx context.Context, filter Map, page *Pagination) ([]*types.Hotel, error) {
 	pipeline := []bson.M{
 		{"$match": filter},

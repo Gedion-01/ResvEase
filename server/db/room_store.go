@@ -35,48 +35,66 @@ func NewMongoRoomStore(client *mongo.Client, hotelStore HotelStore, bookingStore
 	}
 }
 
-func (s *MongoRoomStore) GetRooms(ctx context.Context, hotelFilters, roomFilters bson.M, fromDate, tillDate *time.Time, page, limit int) ([]*types.GroupedRoom, error) {
-	pipeline := []bson.M{
-		{"$lookup": bson.M{
-			"from":         "hotels",
-			"localField":   "hotelID",
-			"foreignField": "_id",
-			"as":           "hotel",
-		}},
-		{"$unwind": "$hotel"},
-		{"$match": hotelFilters},
-		{"$lookup": bson.M{
+func (s *MongoRoomStore) GetRooms(
+	ctx context.Context,
+	hotelFilters, roomFilters bson.M,
+	fromDate, tillDate *time.Time,
+	page, limit int,
+) ([]*types.GroupedRoom, error) {
+
+	pipeline := []bson.M{}
+
+	// Match the hotel filters (contains _id if you want a specific hotel)
+	pipeline = append(pipeline, bson.M{
+		"$match": hotelFilters,
+	})
+
+	// Look up booking documents that reference these rooms
+	pipeline = append(pipeline, bson.M{
+		"$lookup": bson.M{
 			"from":         "bookings",
 			"localField":   "_id",
 			"foreignField": "roomID",
 			"as":           "bookings",
-		}},
-		{"$unwind": bson.M{
+		},
+	})
+
+	// Unwind bookings so we can filter on date range
+	pipeline = append(pipeline, bson.M{
+		"$unwind": bson.M{
 			"path":                       "$bookings",
 			"preserveNullAndEmptyArrays": true,
-		}},
-	}
+		},
+	})
 
-	// Add date range filter
+	// Filter out rooms that are booked within [fromDate, tillDate] (unless canceled)
 	pipeline = append(pipeline, bson.M{
 		"$match": bson.M{
 			"$or": []bson.M{
+				// No bookings at all => keep room
 				{"bookings": bson.M{"$exists": false}},
+				// Booking is canceled => keep room
 				{"bookings.canceled": true},
-				{"bookings.fromDate": bson.M{"$gte": *tillDate}},
-				{"bookings.tillDate": bson.M{"$lte": *fromDate}},
+				// Booking starts after the requested end => no overlap
+				{"bookings.fromDate": bson.M{"$gte": tillDate}},
+				// Booking ends before the requested start => no overlap
+				{"bookings.tillDate": bson.M{"$lte": fromDate}},
 			},
 		},
 	})
 
-	// Add room filters
+	// If more room-specific filters exist, apply them
 	if len(roomFilters) > 0 {
 		pipeline = append(pipeline, bson.M{"$match": roomFilters})
 	}
 
+	// Group by room name to count how many individual rooms share that name
 	pipeline = append(pipeline, bson.M{
 		"$group": bson.M{
-			"_id":         "$name",
+			"_id": bson.M{
+				"hotelID": "$hotelID",
+				"name":    "$name",
+			},
 			"id":          bson.M{"$first": "$_id"},
 			"name":        bson.M{"$first": "$name"},
 			"description": bson.M{"$first": "$description"},
@@ -94,11 +112,11 @@ func (s *MongoRoomStore) GetRooms(ctx context.Context, hotelFilters, roomFilters
 		},
 	})
 
-	// Add pagination
+	// Pagination
 	pipeline = append(pipeline, bson.M{"$skip": (page - 1) * limit})
 	pipeline = append(pipeline, bson.M{"$limit": limit})
 
-	// Project to exclude _id and include hotel name
+	// Final projection
 	pipeline = append(pipeline, bson.M{
 		"$project": bson.M{
 			"_id":            0,
@@ -112,7 +130,6 @@ func (s *MongoRoomStore) GetRooms(ctx context.Context, hotelFilters, roomFilters
 			"bedType":        1,
 			"bedrooms":       1,
 			"availableCount": 1,
-			"hotelName":      "$hotel.name",
 		},
 	})
 
