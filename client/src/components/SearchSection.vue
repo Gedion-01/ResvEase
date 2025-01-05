@@ -3,7 +3,7 @@ import { useRoute, useRouter, type RouteParams } from "vue-router";
 import type { DateRange } from "radix-vue";
 import { RangeCalendar } from "@/components/ui/range-calendar";
 import { getLocalTimeZone, parseDate } from "@internationalized/date";
-import { type Ref, ref, computed, reactive, nextTick } from "vue";
+import { type Ref, ref, computed, reactive } from "vue";
 import { useSearchStore } from "@/store/searchStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +17,7 @@ import {
 import { Search } from "lucide-vue-next";
 import { addDays, format } from "date-fns";
 import { useQueryClient } from "@tanstack/vue-query";
+import { emit } from "@/events/eventBus";
 
 const searchStore = useSearchStore();
 searchStore.loadSearchParams();
@@ -101,10 +102,7 @@ const quickFilters = [
   "5-star hotels",
 ];
 
-// i need a function that checks searchStore.location === location if its true return true
-
 const handleSearch = async () => {
-  console.log("Search", location.value, value.value, guests);
   const query = {
     location: location.value,
     checkIn: value?.value.start
@@ -115,7 +113,7 @@ const handleSearch = async () => {
       : format(addDays(new Date(), 1), "yyyy-MM-dd"),
     adults: guests.adults.toString(),
     children: guests.children.toString(),
-    roomCapacity: guests.adults + guests.children,
+    roomCapacity: (guests.adults + guests.children).toString(),
   };
   searchStore.setSearchParams({
     location: location.value,
@@ -125,17 +123,14 @@ const handleSearch = async () => {
     children: guests.children,
   });
 
-  await nextTick();
-
   if (route.name === "Hotel") {
-    // Update the query parameters without navigating
     router.replace({ query });
 
     const id = route.params.id as string;
     console.log(id, query);
-    queryClient.invalidateQueries({ queryKey: ["rooms", id, query] });
+
+    emit("updateRooms", query);
   } else {
-    // Navigate to the search results page
     router.replace({ name: "SearchResults", query });
   }
 };

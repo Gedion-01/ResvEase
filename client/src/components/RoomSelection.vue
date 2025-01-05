@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, defineProps, reactive } from "vue";
+import { ref, defineProps, reactive, watch } from "vue";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,24 +16,14 @@ import {
 import { useRooms } from "@/services/queries";
 import { useRoute } from "vue-router";
 
-interface RoomType {
-  id: string;
-  name: string;
-  description: string;
-  price: number;
-  capacity: number;
-  amenities: string[];
-  available: number;
-  images: string[];
-}
-
 const props = defineProps<{
   hotelId: string;
   onRoomSelect: (roomId: string) => void;
 }>();
 
 const route = useRoute();
-const queryParams = {
+
+const queryParams = reactive({
   location: route.query.location as string,
   checkIn: route.query.checkIn as string,
   checkOut: route.query.checkOut as string,
@@ -43,9 +33,9 @@ const queryParams = {
     parseInt(route.query.adults as string, 10) +
     parseInt(route.query.children as string, 10)
   ).toString(),
-};
+});
 
-const { data, isLoading } = useRooms(props.hotelId, queryParams);
+const { data, isLoading, refetch } = useRooms(props.hotelId, queryParams);
 
 const selectedRoom = ref<string>("");
 const currentImageIndex = ref<{ [key: string]: number }>({});
@@ -80,6 +70,24 @@ const getAmenityIcon = (amenity: Amenity) => {
       return null;
   }
 };
+
+const handleUpdateRooms = (query: any) => {
+  queryParams.location = query.location;
+  queryParams.checkIn = query.checkIn;
+  queryParams.checkOut = query.checkOut;
+  queryParams.adults = query.adults;
+  queryParams.children = query.children;
+  queryParams.roomCapacity = query.roomCapacity;
+  refetch();
+};
+
+watch(
+  () => route.query,
+  (newQuery) => {
+    handleUpdateRooms(newQuery);
+  },
+  { deep: true }
+);
 </script>
 
 <template>
