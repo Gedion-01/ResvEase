@@ -1,11 +1,19 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { ref, watch } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { useFilterStore } from "@/store/filterStore";
 import { Slider } from "@/components/ui/slider";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Star } from "lucide-vue-next";
 
-const priceRange = ref([0, 1000]);
-const selectedAmenities = ref<string[]>([]);
+const filterStore = useFilterStore();
+filterStore.loadFilterParams();
+
+const priceRange = ref(filterStore.priceRange);
+const starRating = ref(filterStore.starRating);
+const selectedAmenities = ref<string[]>(filterStore.selectedAmenities);
 
 const amenities = [
   "Wi-Fi",
@@ -19,14 +27,37 @@ const amenities = [
 ];
 
 const handleAmenityChange = (amenity: string) => {
-  if (selectedAmenities.value.includes(amenity)) {
-    selectedAmenities.value = selectedAmenities.value.filter(
-      (a) => a !== amenity
-    );
-  } else {
-    selectedAmenities.value = [...selectedAmenities.value, amenity];
-  }
+  filterStore.toggleAmenity(amenity);
+  selectedAmenities.value = filterStore.selectedAmenities;
+  filterStore.saveFilterParams();
+  executeFilter();
 };
+
+const router = useRouter();
+const route = useRoute();
+
+const executeFilter = () => {
+  const query = {
+    ...route.query,
+    minPrice: priceRange.value[0].toString(),
+    maxPrice: priceRange.value[1].toString(),
+    rating: starRating.value.toString(),
+    amenities: selectedAmenities.value.join(","),
+  };
+  router.replace({ name: "SearchResults", query });
+};
+
+watch(priceRange, (newRange) => {
+  filterStore.setPriceRange(newRange);
+  filterStore.saveFilterParams();
+  executeFilter();
+});
+
+watch(starRating, (newRating) => {
+  filterStore.setStarRating(newRating);
+  filterStore.saveFilterParams();
+  executeFilter();
+});
 </script>
 <template>
   <div class="space-y-6 sticky top-20">
@@ -34,8 +65,37 @@ const handleAmenityChange = (amenity: string) => {
       <h2 class="text-lg font-semibold mb-2">Price Range</h2>
       <Slider :min="0" :max="1000" :step="10" v-model="priceRange" />
       <div class="flex justify-between mt-2">
-        <span>{{ priceRange[0] }}</span>
-        <span>{{ priceRange[1] }}</span>
+        <span>${{ priceRange[0] }}</span>
+        <span>${{ priceRange[1] }}</span>
+      </div>
+    </div>
+    <div>
+      <h2 class="text-lg font-semibold mb-2">Star Rating</h2>
+      <div class="flex items-center space-x-2">
+        <Button
+          v-for="rating in 5"
+          :key="rating"
+          :variant="starRating >= rating ? 'default' : 'outline'"
+          size="sm"
+          class="p-2"
+          @click="starRating = rating"
+        >
+          <Star
+            :class="[
+              '`h-4 w-4',
+              starRating >= rating ? 'text-yellow-400 fill-current' : '',
+            ]"
+          />
+        </Button>
+        <Button
+          v-if="starRating > 0"
+          variant="ghost"
+          size="sm"
+          @click="starRating = 0"
+          class="text-muted-foreground"
+        >
+          Clear
+        </Button>
       </div>
     </div>
     <div>
