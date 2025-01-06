@@ -17,7 +17,6 @@ import {
 import { Search } from "lucide-vue-next";
 import { addDays, format } from "date-fns";
 import { useQueryClient } from "@tanstack/vue-query";
-import { emit } from "@/events/eventBus";
 
 const searchStore = useSearchStore();
 searchStore.loadSearchParams();
@@ -128,8 +127,6 @@ const handleSearch = async () => {
 
     const id = route.params.id as string;
     console.log(id, query);
-
-    emit("updateRooms", query);
   } else {
     router.replace({ name: "SearchResults", query });
   }
