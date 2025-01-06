@@ -202,6 +202,7 @@ func (h *HotelHandler) HandleGetHotels(c *fiber.Ctx) error {
 	}
 
 	hotels, err := h.store.Hotel.GetHotels(c.Context(), filter, &params.Pagination, params.MinPrice, params.MaxPrice)
+
 	if err != nil {
 		return ErrResourceNotFound("hotel")
 	}
