@@ -3,30 +3,60 @@ import { useHotels } from "@/services/queries";
 import HotelCard from "./HotelCard.vue";
 import { useRoute, useRouter } from "vue-router";
 import { useSearchStore } from "@/store/searchStore";
+import { useFilterStore } from "@/store/filterStore";
+import { watch, ref, reactive } from "vue";
 
 const route = useRoute();
 const router = useRouter();
 const searchStore = useSearchStore();
+const filterStore = useFilterStore();
 
 searchStore.loadSearchParams();
+filterStore.loadFilterParams();
 
-const queryParams = {
+const queryParams = reactive({
   location: searchStore.location,
   checkIn: searchStore.checkIn,
   checkOut: searchStore.checkOut,
   adults: searchStore.adults.toString(),
   children: searchStore.children.toString(),
-};
+  minPrice: filterStore.priceRange[0].toString(),
+  maxPrice: filterStore.priceRange[1].toString(),
+  rating: filterStore.starRating.toString(),
+  amenities: filterStore.selectedAmenities.join(","),
+});
 
 if (JSON.stringify(route.query) !== JSON.stringify(queryParams)) {
   router.replace({ query: queryParams });
 }
 
-const { isLoading, data, isError } = useHotels();
+const { isLoading, isFetching, data, isError, refetch } =
+  useHotels(queryParams);
+
+const handleUpdateFilter = (query: any) => {
+  queryParams.location = query.location;
+  queryParams.checkIn = query.checkIn;
+  queryParams.checkOut = query.checkOut;
+  queryParams.adults = query.adults;
+  queryParams.children = query.children;
+  queryParams.minPrice = query.minPrice;
+  queryParams.maxPrice = query.maxPrice;
+  queryParams.rating = query.rating;
+  queryParams.amenities = query.amenities;
+  refetch();
+};
+
+watch(
+  () => route.query,
+  (newQuery) => {
+    handleUpdateFilter(newQuery);
+  },
+  { deep: true }
+);
 </script>
 <template>
   <div>
-    <div v-if="isLoading">Loading...</div>
+    <div v-if="isLoading || isFetching">Loading...</div>
     <div v-else-if="isError">Error loading hotels</div>
     <div v-else>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
