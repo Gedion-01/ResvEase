@@ -8,10 +8,10 @@ export function useHotel(hotelId: string) {
   });
 }
 
-export function useHotels() {
+export function useHotels(queryParams: Record<string, any>) {
   return useQuery({
     queryKey: ["hotels"],
-    queryFn: getHotels,
+    queryFn: () => getHotels(queryParams),
   });
 }
 

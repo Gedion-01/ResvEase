@@ -14,11 +14,23 @@ export const getHotel = async (hotelId: string) => {
   return response.data;
 };
 
-export const getHotels = async () => {
-  const response = await axiosInstance.get<HotelResponse>(
-    "hotel?page=1&limit=10"
-  );
-  return response.data;
+export const getHotels = async (queryParams: Record<string, any>) => {
+  try {
+    const queryString = new URLSearchParams(queryParams).toString();
+    console.log(queryString, queryParams);
+    const response = await axiosInstance.get<HotelResponse>(
+      `/hotel?page=1&limit=10&${queryString}`
+    );
+    return response.data;
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 404) {
+      console.error("Hotel resource not found:", error.response.data);
+      return { data: [], results: 0, page: 1 };
+    } else {
+      console.error("An error occurred while fetching hotels:", error);
+      throw error;
+    }
+  }
 };
 
 export const getRooms = async (
