@@ -14,7 +14,7 @@ import {
   ChevronRight,
 } from "lucide-vue-next";
 import { useRooms } from "@/services/queries";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 const props = defineProps<{
   hotelId: string;
@@ -22,6 +22,7 @@ const props = defineProps<{
 }>();
 
 const route = useRoute();
+const router = useRouter();
 
 const queryParams = reactive({
   location: route.query.location as string,
@@ -33,9 +34,17 @@ const queryParams = reactive({
     parseInt(route.query.adults as string, 10) +
     parseInt(route.query.children as string, 10)
   ).toString(),
+  minPrice: route.query.minPrice as string,
+  maxPrice: route.query.maxPrice as string,
+  roomAmenities: route.query.roomAmenities
+    ? (route.query.amenities as string).split(",")
+    : [],
 });
 
-const { data, isLoading, refetch } = useRooms(props.hotelId, queryParams);
+const { data, isLoading, isFetching, refetch } = useRooms(
+  props.hotelId,
+  queryParams
+);
 
 const selectedRoom = ref<string>("");
 const currentImageIndex = ref<{ [key: string]: number }>({});
@@ -71,13 +80,85 @@ const getAmenityIcon = (amenity: Amenity) => {
   }
 };
 
+const filters = ref([
+  {
+    id: "price-range",
+    label: `$${queryParams.minPrice}-$${queryParams.maxPrice}`,
+    count: 0,
+  },
+  { id: "breakfast", label: "Breakfast Included", count: 0 },
+  { id: "cancellation", label: "Free Cancellation", count: 0 },
+  { id: "double-bed", label: "1 Double Bed", count: 0 },
+  { id: "two-beds", label: "2 Beds", count: 0 },
+  { id: "prepay", label: "Prepay Online", count: 0 },
+  { id: "instant", label: "Instant Confirmation", count: 0 },
+]);
+
+const activeFilters = ref<string[]>([]);
+
+if (queryParams.minPrice && queryParams.maxPrice) {
+  activeFilters.value.push("price-range");
+}
+queryParams.roomAmenities.forEach((amenity) => {
+  activeFilters.value.push(amenity);
+});
+
+const toggleFilter = (filterId: string) => {
+  if (activeFilters.value.includes(filterId)) {
+    activeFilters.value = activeFilters.value.filter((id) => id !== filterId);
+  } else {
+    activeFilters.value.push(filterId);
+  }
+  updateQueryParams();
+};
+const updateQueryParams = () => {
+  const query = { ...route.query };
+
+  // Update queryParams based on activeFilters
+  if (activeFilters.value.includes("price-range")) {
+    query.minPrice = queryParams.minPrice;
+    query.maxPrice = queryParams.maxPrice;
+  } else {
+    delete query.minPrice;
+    delete query.maxPrice;
+  }
+
+  // Update amenities in queryParams
+  const amenities = activeFilters.value.filter((filter) =>
+    [
+      "breakfast",
+      "cancellation",
+      "double-bed",
+      "two-beds",
+      "prepay",
+      "instant",
+    ].includes(filter)
+  );
+  if (amenities.length > 0) {
+    query.roomAmenities = amenities.join(",");
+  } else {
+    delete query.amenities;
+  }
+
+  router.push({ query });
+  refetch();
+};
+
 const handleUpdateRooms = (query: any) => {
   queryParams.location = query.location;
   queryParams.checkIn = query.checkIn;
   queryParams.checkOut = query.checkOut;
   queryParams.adults = query.adults;
   queryParams.children = query.children;
-  queryParams.roomCapacity = query.roomCapacity;
+  (queryParams.roomCapacity = (
+    parseInt(route.query.adults as string, 10) +
+    parseInt(route.query.children as string, 10)
+  ).toString()),
+    (queryParams.minPrice = query.minPrice);
+  queryParams.maxPrice = query.maxPrice;
+  queryParams.roomAmenities = query.roomAmenities
+    ? query.roomAmenities.split(",")
+    : [];
   refetch();
 };
 
@@ -88,12 +169,73 @@ watch(
   },
   { deep: true }
 );
+
+const calculateFilterCounts = () => {
+  const counts = {
+    "price-range": 0,
+    breakfast: 0,
+    cancellation: 0,
+    "double-bed": 0,
+    "two-beds": 0,
+    prepay: 0,
+    instant: 0,
+  };
+
+  data.value?.data.forEach((room) => {
+    if (
+      room.price >= parseFloat(queryParams.minPrice) &&
+      room.price <= parseFloat(queryParams.maxPrice)
+    )
+      counts["price-range"]++;
+    if (room.amenities.includes("Breakfast Included")) counts["breakfast"]++;
+    if (room.amenities.includes("Free Cancellation")) counts["cancellation"]++;
+    if (room.bedType === "1 Double Bed") counts["double-bed"]++;
+    if (room.bedType === "2 Beds") counts["two-beds"]++;
+    // if (room.paymentOption === "Prepay Online") counts["prepay"]++;
+    // if (room.confirmationType === "Instant Confirmation") counts["instant"]++;
+  });
+
+  filters.value.forEach((filter) => {
+    filter.count = counts[filter.id as keyof typeof counts];
+  });
+};
+watch(data, calculateFilterCounts, { immediate: true });
 </script>
 
 <template>
   <div class="space-y-6">
-    <h2 class="text-2xl font-bold">Select Your Room</h2>
+    <div class="space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="text-2xl font-bold">Select Your Room</h2>
+        <Button
+          v-if="activeFilters.length > 0"
+          variant="ghost"
+          size="sm"
+          @click="activeFilters = []"
+          class="text-muted-foreground"
+        >
+          Clear all filters
+        </Button>
+      </div>
+      <ScrollArea class="w-full whitespace-nowrap rounded-md border">
+        <div class="flex w-max space-x-2 p-4">
+          <Badge
+            v-for="filter in filters"
+            :key="filter.id"
+            :variant="activeFilters.includes(filter.id) ? 'default' : 'outline'"
+            class="cursor-pointer"
+            @click="toggleFilter(filter.id)"
+          >
+            {{ filter.label }} ({{ filter.count }})
+            <X v-if="activeFilters.includes(filter.id)" class="ml-1 h-3 w-3" />
+          </Badge>
+        </div>
+        <ScrollBar orientation="horizontal" />
+      </ScrollArea>
+    </div>
+    <div v-if="isLoading || isFetching">Loading...</div>
     <Card
+      v-else
       v-for="room in data?.data"
       :key="room.id"
       :class="[
