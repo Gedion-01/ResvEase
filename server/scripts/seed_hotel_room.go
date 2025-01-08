@@ -5,6 +5,7 @@ import (
 	"hotel-reservation/db"
 	"hotel-reservation/db/fixtures"
 	"hotel-reservation/types"
+	"math"
 	"time"
 )
 
@@ -65,11 +66,51 @@ func GenerateSpecificHotelsAndRooms(store *db.Store, user *types.User) {
 		},
 	}
 
-	roomBasePrices := map[string]float64{
-		"Deluxe Room":     200,
-		"Executive Suite": 350,
-		"Standard Room":   150,
-		"Family Room":     400,
+	roomTypes := []types.Room{
+		{
+			Name:        "Deluxe King Room",
+			Description: "Spacious room with city view",
+			Price:       120,
+			Capacity:    2,
+			BedType:     "King",
+			Bedrooms:    2,
+			Amenities:   []string{"Free Wi-Fi", "Breakfast Included", "Room Service"},
+			Images:      []string{"/room1-1.jpg", "/room1-2.jpg", "/room1-3.jpg"},
+			Features:    []string{"Breakfast Included", "Free Cancellation", "1 Double Bed"},
+		},
+		{
+			Name:        "Executive Queen Suite",
+			Description: "Luxury suite with separate living area",
+			Price:       350,
+			Capacity:    2,
+			BedType:     "Queen",
+			Bedrooms:    2,
+			Amenities:   []string{"Free Wi-Fi", "Breakfast Included", "Room Service", "Mini Bar"},
+			Images:      []string{"/room2-1.jpg", "/room2-2.jpg", "/room2-3.jpg"},
+			Features:    []string{"Prepay Online", "Instant Confirmation", "2 Beds"},
+		},
+		{
+			Name:        "Family Twin Room",
+			Description: "Perfect for families with children",
+			Price:       400,
+			Capacity:    4,
+			BedType:     "Twin",
+			Bedrooms:    4,
+			Amenities:   []string{"Free Wi-Fi", "Breakfast Included", "Room Service", "Kids Area"},
+			Images:      []string{"/room3-1.jpg", "/room3-2.jpg", "/room3-3.jpg"},
+			Features:    []string{"Breakfast Included", "Instant Confirmation", "2 Beds"},
+		},
+		{
+			Name:        "Standard Single Room",
+			Description: "Cozy room for solo travelers",
+			Price:       80,
+			Capacity:    1,
+			BedType:     "Single",
+			Bedrooms:    1,
+			Amenities:   []string{"Free Wi-Fi", "Room Service"},
+			Images:      []string{"/room4-1.jpg", "/room4-2.jpg", "/room4-3.jpg"},
+			Features:    []string{"Free Cancellation", "1 Single Bed"},
+		},
 	}
 
 	var addedRooms []types.Room
@@ -86,19 +127,20 @@ func GenerateSpecificHotelsAndRooms(store *db.Store, user *types.User) {
 			nil,
 		)
 
-		for roomName, basePrice := range roomBasePrices {
-			adjustedPrice := basePrice * hotelData.PriceMultiplier
+		for _, roomType := range roomTypes {
+			adjustedPrice := math.Round(roomType.Price*hotelData.PriceMultiplier*100) / 100
 			for i := 0; i < 4; i++ {
 				addedRoom := fixtures.AddRoom(
 					store,
-					roomName,
-					fmt.Sprintf("A %s in %s.", roomName, hotelData.Name),
+					roomType.Name,
+					roomType.Description,
 					adjustedPrice,
-					2,
-					[]string{"Free Wi-Fi", "Air Conditioning"},
-					[]string{"https://source.unsplash.com/800x600/?" + roomName, "https://source.unsplash.com/800x600/?room"},
-					"King",
-					1,
+					roomType.Capacity,
+					roomType.Amenities,
+					roomType.Images,
+					roomType.BedType,
+					roomType.Bedrooms,
+					roomType.Features,
 					true,
 					hotel.ID,
 				)

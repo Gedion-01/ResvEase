@@ -25,7 +25,7 @@ func AddBooking(store *db.Store, uid, rid primitive.ObjectID, from, till time.Ti
 	return insertedBooking
 }
 
-func AddRoom(store *db.Store, name string, description string, price float64, capacity int, amenities []string, images []string, bedtype string, bedrooms int, available bool, hid primitive.ObjectID) *types.Room {
+func AddRoom(store *db.Store, name string, description string, price float64, capacity int, amenities []string, images []string, bedtype string, bedrooms int, features []string, available bool, hid primitive.ObjectID) *types.Room {
 	room := &types.Room{
 		Name:        name,
 		Description: description,
@@ -35,6 +35,7 @@ func AddRoom(store *db.Store, name string, description string, price float64, ca
 		Images:      images,
 		BedType:     bedtype,
 		Bedrooms:    bedrooms,
+		Features:    features,
 		Available:   available,
 		HotelID:     hid,
 	}
