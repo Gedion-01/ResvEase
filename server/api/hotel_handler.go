@@ -22,18 +22,44 @@ func NewHotelHandler(store *db.Store) *HotelHandler {
 	}
 }
 
+var amenityMapping = map[string]string{
+	"breakfast":    "Breakfast Included",
+	"cancellation": "Free Cancellation",
+	"double-bed":   "1 Double Bed",
+	"two-beds":     "2 Beds",
+	"prepay":       "Prepay Online",
+	"instant":      "Instant Confirmation",
+	"free-wifi":    "Free Wi-Fi",
+	"room-service": "Room Service",
+}
+
+func translateAmenities(amenities string) []string {
+	amenityList := strings.Split(amenities, ",")
+	translatedAmenities := make([]string, 0, len(amenityList))
+	for _, amenity := range amenityList {
+		if dbValue, exists := amenityMapping[amenity]; exists {
+			translatedAmenities = append(translatedAmenities, dbValue)
+		} else {
+			translatedAmenities = append(translatedAmenities, amenity)
+		}
+	}
+	return translatedAmenities
+}
+
 type HotelRoomParams struct {
 	db.Pagination
-	Rating         int    `json:"rating"`
-	HotelRating    string `json:"hotelRating"`
-	HotelAmenities string `json:"hotelAmenities"`
-	HotelLocation  string `json:"hotelLocation"`
-	RoomCapacity   string `json:"roomCapacity"`
-	RoomAmenities  string `json:"roomAmenities"`
-	RoomBedType    string `json:"roomBedType"`
-	RoomBedrooms   string `json:"roomBedrooms"`
-	CheckIn        string `json:"checkIn"`
-	CheckOut       string `json:"checkOut"`
+	Rating         int     `json:"rating"`
+	HotelRating    string  `json:"hotelRating"`
+	HotelAmenities string  `json:"hotelAmenities"`
+	HotelLocation  string  `json:"hotelLocation"`
+	RoomCapacity   string  `json:"roomCapacity"`
+	RoomAmenities  string  `json:"roomAmenities"`
+	RoomBedType    string  `json:"roomBedType"`
+	RoomBedrooms   string  `json:"roomBedrooms"`
+	CheckIn        string  `json:"checkIn"`
+	CheckOut       string  `json:"checkOut"`
+	MinPrice       float64 `json:"minPrice"`
+	MaxPrice       float64 `json:"maxPrice"`
 }
 
 func (h *HotelHandler) HandleGetRooms(c *fiber.Ctx) error {
@@ -132,8 +158,12 @@ func (h *HotelHandler) HandleGetRooms(c *fiber.Ctx) error {
 		}
 		roomFilters["capacity"] = bson.M{"$gte": capacity}
 	}
+	// if params.RoomAmenities != "" {
+	// 	roomFilters["amenities"] = bson.M{"$all": strings.Split(params.RoomAmenities, ",")}
+	// }
 	if params.RoomAmenities != "" {
-		roomFilters["amenities"] = bson.M{"$all": strings.Split(params.RoomAmenities, ",")}
+		translatedAmenities := translateAmenities(params.RoomAmenities)
+		roomFilters["amenities"] = bson.M{"$all": translatedAmenities}
 	}
 	if params.RoomBedType != "" {
 		roomFilters["bedType"] = params.RoomBedType
@@ -147,6 +177,16 @@ func (h *HotelHandler) HandleGetRooms(c *fiber.Ctx) error {
 			})
 		}
 		roomFilters["bedrooms"] = bson.M{"$gte": bedrooms}
+	}
+	if params.MinPrice > 0 {
+		roomFilters["price"] = bson.M{"$gte": params.MinPrice}
+	}
+	if params.MaxPrice > 0 {
+		if _, ok := roomFilters["price"]; ok {
+			roomFilters["price"].(bson.M)["$lte"] = params.MaxPrice
+		} else {
+			roomFilters["price"] = bson.M{"$lte": params.MaxPrice}
+		}
 	}
 
 	rooms, err := h.store.Room.GetRooms(c.Context(), hotelFilters, roomFilters, &fromDate, &tillDate, page, limit)
