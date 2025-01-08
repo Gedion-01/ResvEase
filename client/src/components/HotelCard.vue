@@ -5,14 +5,17 @@ import { RouterLink } from "vue-router";
 import { Badge } from "@/components/ui/badge";
 import type { Hotel } from "@/types/hotel";
 import { useSearchStore } from "@/store/searchStore";
+import { useFilterStore } from "@/store/filterStore";
 
 defineProps<{
   hotel: Hotel;
 }>();
 
 const searchStore = useSearchStore();
+const filterStore = useFilterStore();
 
 searchStore.loadSearchParams();
+filterStore.loadFilterParams();
 
 const queryParams = {
   location: searchStore.location,
@@ -20,9 +23,12 @@ const queryParams = {
   checkOut: searchStore.checkOut,
   adults: searchStore.adults.toString(),
   children: searchStore.children.toString(),
+  minPrice: filterStore.priceRange[0].toString(),
+  maxPrice: filterStore.priceRange[1].toString(),
 };
 
 const queryString = new URLSearchParams(queryParams).toString();
+console.log(queryString);
 
 const testArray = [1, 2, 3, 4, 5];
 </script>
