@@ -35,7 +35,10 @@ onUnmounted(() => {
   window.removeEventListener("scroll", handleScroll);
 });
 
-const { data, isLoading } = useHotel(id);
+const { data, isLoading, error } = useHotel(id);
+if (error) {
+  console.error("Error fetching hotel data:", error);
+}
 </script>
 
 <template>
@@ -55,15 +58,7 @@ const { data, isLoading } = useHotel(id);
       <div class="md:col-span-2" v-if="data">
         <HotelDetails :hotel="data" />
         <div class="mt-8">
-          <RoomSelection
-            :hotelId="id"
-            :onRoomSelect="
-              (roomId) => {
-                console.log('Selected room:', roomId);
-                // In a real app, this would update the booking form with the selected room
-              }
-            "
-          />
+          <RoomSelection :hotelId="id" :onRoomSelect="(roomId) => {}" />
         </div>
       </div>
       <div class="md:sticky md:top-20 h-fit">

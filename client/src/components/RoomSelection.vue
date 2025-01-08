@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, defineProps, reactive, watch } from "vue";
+import { useFilterStore } from "@/store/filterStore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +22,8 @@ const props = defineProps<{
   onRoomSelect: (roomId: string) => void;
 }>();
 
+const filterStore = useFilterStore();
+
 const route = useRoute();
 const router = useRouter();
 
@@ -37,9 +40,11 @@ const queryParams = reactive({
   minPrice: route.query.minPrice as string,
   maxPrice: route.query.maxPrice as string,
   roomAmenities: route.query.roomAmenities
-    ? (route.query.amenities as string).split(",")
+    ? (route.query.roomAmenities as string).split(",")
     : [],
 });
+
+console.log("Initial queryParams:", queryParams);
 
 const { data, isLoading, isFetching, refetch } = useRooms(
   props.hotelId,
@@ -119,8 +124,11 @@ const updateQueryParams = () => {
     query.minPrice = queryParams.minPrice;
     query.maxPrice = queryParams.maxPrice;
   } else {
-    delete query.minPrice;
-    delete query.maxPrice;
+    filterStore.rest();
+    queryParams.minPrice = filterStore.priceRange[0].toString();
+    queryParams.maxPrice = filterStore.priceRange[1].toString();
+    query.minPrice = filterStore.priceRange[0].toString();
+    query.maxPrice = filterStore.priceRange[1].toString();
   }
 
   // Update amenities in queryParams

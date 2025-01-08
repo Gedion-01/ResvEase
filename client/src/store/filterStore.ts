@@ -8,6 +8,13 @@ export const useFilterStore = defineStore("filter", {
     selectedAmenities: [] as string[],
   }),
   actions: {
+    rest() {
+      this.priceRange = [0, 1000];
+      this.starRating = 0;
+      this.selectedAmenities = [];
+
+      localStorage.removeItem("filterParams");
+    },
     setPriceRange(range: [number, number]) {
       this.priceRange = range;
     },
