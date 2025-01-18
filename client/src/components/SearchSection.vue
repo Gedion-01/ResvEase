@@ -307,7 +307,7 @@ const handleSearch = async () => {
       v-if="route.fullPath == '/' || route.fullPath.includes('/search')"
       class="mt-4 flex items-center justify-between container"
     >
-      <div class="flex gap-2 overflow-x-auto pb-2">
+      <!-- <div class="flex gap-2 overflow-x-auto pb-2">
         <Badge
           v-for="filter in quickFilters"
           :key="filter"
@@ -316,7 +316,7 @@ const handleSearch = async () => {
         >
           {{ filter }}
         </Badge>
-      </div>
+      </div> -->
       <div class="flex items-center gap-2">
         <Button
           :variant="viewMode === 'list' ? 'default' : 'outline'"

@@ -85,19 +85,27 @@ const getAmenityIcon = (amenity: Amenity) => {
   }
 };
 
-const filters = ref([
-  {
-    id: "price-range",
-    label: `$${queryParams.minPrice}-$${queryParams.maxPrice}`,
-    count: 0,
+const initialFilters = reactive({
+  priceRange: {
+    minPrice: queryParams.minPrice,
+    maxPrice: queryParams.maxPrice,
   },
-  { id: "breakfast", label: "Breakfast Included", count: 0 },
-  { id: "cancellation", label: "Free Cancellation", count: 0 },
-  { id: "double-bed", label: "1 Double Bed", count: 0 },
-  { id: "two-beds", label: "2 Beds", count: 0 },
-  { id: "prepay", label: "Prepay Online", count: 0 },
-  { id: "instant", label: "Instant Confirmation", count: 0 },
-]);
+  filters: [
+    {
+      id: "price-range",
+      label: `$${queryParams.minPrice}-$${queryParams.maxPrice}`,
+      count: 0,
+    },
+    { id: "breakfast", label: "Breakfast Included", count: 0 },
+    { id: "cancellation", label: "Free Cancellation", count: 0 },
+    { id: "double-bed", label: "1 Double Bed", count: 0 },
+    { id: "two-beds", label: "2 Beds", count: 0 },
+    { id: "prepay", label: "Prepay Online", count: 0 },
+    { id: "instant", label: "Instant Confirmation", count: 0 },
+  ],
+});
+
+const filters = ref([...initialFilters.filters]);
 
 const activeFilters = ref<string[]>([]);
 
@@ -120,15 +128,31 @@ const updateQueryParams = () => {
   const query = { ...route.query };
 
   // Update queryParams based on activeFilters
+  // if (activeFilters.value.includes("price-range")) {
+  //   console.log("activeFilters:");
+  //   query.minPrice = queryParams.minPrice;
+  //   query.maxPrice = queryParams.maxPrice;
+  // } else {
+  //   filterStore.rest();
+  //   queryParams.minPrice = initialFilters.priceRange.minPrice.toString();
+  //   queryParams.maxPrice = initialFilters.priceRange.maxPrice.toString();
+  //   query.minPrice = filterStore.priceRange[0].toString();
+  //   query.maxPrice = filterStore.priceRange[1].toString();
+  // }
   if (activeFilters.value.includes("price-range")) {
-    query.minPrice = queryParams.minPrice;
-    query.maxPrice = queryParams.maxPrice;
+    // Use the initial filter price range
+    queryParams.minPrice = initialFilters.priceRange.minPrice.toString();
+    queryParams.maxPrice = initialFilters.priceRange.maxPrice.toString();
+    query.minPrice = initialFilters.priceRange.minPrice.toString();
+    query.maxPrice = initialFilters.priceRange.maxPrice.toString();
   } else {
+    // Reset to the global store's price range
     filterStore.rest();
-    queryParams.minPrice = filterStore.priceRange[0].toString();
-    queryParams.maxPrice = filterStore.priceRange[1].toString();
-    query.minPrice = filterStore.priceRange[0].toString();
-    query.maxPrice = filterStore.priceRange[1].toString();
+    const [storeMin, storeMax] = filterStore.priceRange;
+    queryParams.minPrice = storeMin.toString();
+    queryParams.maxPrice = storeMax.toString();
+    query.minPrice = storeMin.toString();
+    query.maxPrice = storeMax.toString();
   }
 
   // Update amenities in queryParams
