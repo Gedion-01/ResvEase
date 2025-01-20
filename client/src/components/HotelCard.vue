@@ -28,7 +28,6 @@ const queryParams = {
 };
 
 const queryString = new URLSearchParams(queryParams).toString();
-console.log(queryString);
 
 const testArray = [1, 2, 3, 4, 5];
 </script>

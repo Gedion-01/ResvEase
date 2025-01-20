@@ -51,7 +51,6 @@ type HotelRoomParams struct {
 	Rating         int     `json:"rating"`
 	HotelRating    string  `json:"hotelRating"`
 	HotelAmenities string  `json:"hotelAmenities"`
-	HotelLocation  string  `json:"hotelLocation"`
 	RoomCapacity   string  `json:"roomCapacity"`
 	RoomAmenities  string  `json:"roomAmenities"`
 	RoomBedType    string  `json:"roomBedType"`
@@ -142,9 +141,6 @@ func (h *HotelHandler) HandleGetRooms(c *fiber.Ctx) error {
 	if params.HotelAmenities != "" {
 		hotelFilters["hotel.amenities"] = bson.M{"$all": strings.Split(params.HotelAmenities, ",")}
 	}
-	if params.HotelLocation != "" {
-		hotelFilters["hotel.location"] = params.HotelLocation
-	}
 
 	// Build room filters
 	roomFilters := bson.M{}
@@ -219,6 +215,7 @@ type ResourceResp struct {
 type HotelQueryParams struct {
 	db.Pagination
 	Rating    int     `json:"rating"`
+	Location  string  `json:"location"`
 	Amenities string  `json:"amenities"`
 	MinPrice  float64 `json:"minPrice"`
 	MaxPrice  float64 `json:"maxPrice"`
@@ -239,6 +236,9 @@ func (h *HotelHandler) HandleGetHotels(c *fiber.Ctx) error {
 	}
 	if params.Amenities != "" {
 		filter["amenities"] = bson.M{"$all": strings.Split(params.Amenities, ",")}
+	}
+	if params.Location != "" {
+		filter["location"] = bson.M{"$regex": primitive.Regex{Pattern: params.Location, Options: "i"}}
 	}
 
 	hotels, err := h.store.Hotel.GetHotels(c.Context(), filter, &params.Pagination, params.MinPrice, params.MaxPrice)

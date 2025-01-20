@@ -4,7 +4,7 @@ import HotelCard from "./HotelCard.vue";
 import { useRoute, useRouter } from "vue-router";
 import { useSearchStore } from "@/store/searchStore";
 import { useFilterStore } from "@/store/filterStore";
-import { watch, ref, reactive } from "vue";
+import { watch, ref, reactive, onMounted } from "vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -26,9 +26,37 @@ const queryParams = reactive({
   amenities: filterStore.selectedAmenities.join(","),
 });
 
-if (JSON.stringify(route.query) !== JSON.stringify(queryParams)) {
-  router.replace({ query: queryParams });
-}
+// if (JSON.stringify(route.query) !== JSON.stringify(queryParams)) {
+//   router.replace({
+//     path: route.path,
+//     query: {
+//       ...queryParams,
+//     },
+//   });
+// }
+
+const updateQueryParams = () => {
+  const query = {
+    location: queryParams.location,
+    checkIn: queryParams.checkIn,
+    checkOut: queryParams.checkOut,
+    adults: queryParams.adults,
+    children: queryParams.children,
+    minPrice: queryParams.minPrice,
+    maxPrice: queryParams.maxPrice,
+    rating: queryParams.rating,
+    amenities: queryParams.amenities,
+  };
+
+  if (JSON.stringify(route.query) !== JSON.stringify(query)) {
+    router.replace({
+      path: route.path,
+      query,
+    });
+  }
+};
+
+updateQueryParams();
 
 const { isLoading, isFetching, data, isError, refetch } =
   useHotels(queryParams);

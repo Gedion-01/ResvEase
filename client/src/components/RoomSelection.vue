@@ -44,8 +44,6 @@ const queryParams = reactive({
     : [],
 });
 
-console.log("Initial queryParams:", queryParams);
-
 const { data, isLoading, isFetching, refetch } = useRooms(
   props.hotelId,
   queryParams
