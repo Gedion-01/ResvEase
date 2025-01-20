@@ -17,9 +17,13 @@ import {
 import { Search } from "lucide-vue-next";
 import { addDays, format } from "date-fns";
 import { useQueryClient } from "@tanstack/vue-query";
+import { useFilterStore } from "@/store/filterStore";
 
 const searchStore = useSearchStore();
 searchStore.loadSearchParams();
+
+const filterStore = useFilterStore();
+filterStore.loadFilterParams();
 
 defineProps({
   isSticky: {
@@ -113,6 +117,10 @@ const handleSearch = async () => {
     adults: guests.adults.toString(),
     children: guests.children.toString(),
     roomCapacity: (guests.adults + guests.children).toString(),
+    minPrice: filterStore.priceRange[0]?.toString() || "0",
+    maxPrice: filterStore.priceRange[1]?.toString() || "1000",
+    rating: filterStore.starRating?.toString() || "0",
+    amenities: filterStore.selectedAmenities.join(",") || "",
   };
   searchStore.setSearchParams({
     location: location.value,
@@ -126,7 +134,6 @@ const handleSearch = async () => {
     router.replace({ query });
 
     const id = route.params.id as string;
-    console.log(id, query);
   } else {
     router.replace({ name: "SearchResults", query });
   }

@@ -15,7 +15,6 @@ const route = useRoute();
 
 // Access the parameter and cast it to the type
 const id = route.params.id as RouteParams["id"];
-console.log(id);
 
 const searchSection = ref<HTMLElement | null>(null);
 const isSticky = ref(false);
