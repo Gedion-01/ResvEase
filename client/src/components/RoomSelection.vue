@@ -6,14 +6,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import {
-  Bed,
-  Users,
-  Wifi,
-  Coffee,
-  Utensils,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-vue-next";
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { Bed, Users, Wifi, Coffee, Utensils } from "lucide-vue-next";
 import { useRooms } from "@/services/queries";
 import { useRoute, useRouter } from "vue-router";
 
@@ -52,7 +51,11 @@ const { data, isLoading, isFetching, refetch } = useRooms(
 const selectedRoom = ref<string>("");
 const currentImageIndex = ref<{ [key: string]: number }>({});
 
+const animationDirection = ref<"slide-left" | "slide-right">("slide-left");
+
 const handleImageNavigation = (roomId: string, direction: "prev" | "next") => {
+  animationDirection.value =
+    direction === "next" ? "slide-left" : "slide-right";
   const currentIndex = currentImageIndex.value[roomId] || 0;
   const room = data.value?.data.find((room) => room.id === roomId);
   if (!room) return;
@@ -125,18 +128,6 @@ const toggleFilter = (filterId: string) => {
 const updateQueryParams = () => {
   const query = { ...route.query };
 
-  // Update queryParams based on activeFilters
-  // if (activeFilters.value.includes("price-range")) {
-  //   console.log("activeFilters:");
-  //   query.minPrice = queryParams.minPrice;
-  //   query.maxPrice = queryParams.maxPrice;
-  // } else {
-  //   filterStore.rest();
-  //   queryParams.minPrice = initialFilters.priceRange.minPrice.toString();
-  //   queryParams.maxPrice = initialFilters.priceRange.maxPrice.toString();
-  //   query.minPrice = filterStore.priceRange[0].toString();
-  //   query.maxPrice = filterStore.priceRange[1].toString();
-  // }
   if (activeFilters.value.includes("price-range")) {
     // Use the initial filter price range
     queryParams.minPrice = initialFilters.priceRange.minPrice.toString();
@@ -292,14 +283,44 @@ watch(data, calculateFilterCounts, { immediate: true });
         <div class="grid md:grid-cols-2 gap-6">
           <div class="relative aspect-video">
             <Dialog>
-              <DialogTrigger asChild>
-                <div class="relative w-full h-full cursor-pointer">
+              <Carousel class="relative w-full h-auto cursor-pointer">
+                <CarouselContent>
+                  <CarouselItem
+                    v-for="(image, index) in room.images"
+                    :key="index"
+                  >
+                    <DialogTrigger asChild>
+                      <img
+                        :src="image"
+                        class="object-cover w-full h-full rounded-lg"
+                        :alt="`${room.name} view ${index + 1}`"
+                      />
+                    </DialogTrigger>
+                  </CarouselItem>
+                </CarouselContent>
+                <CarouselPrevious
+                  variant="secondary"
+                  size="icon"
+                  class="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-lg"
+                  @click.stop
+                />
+                <CarouselNext
+                  variant="secondary"
+                  size="icon"
+                  class="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-lg"
+                  @click.stop
+                />
+              </Carousel>
+              <!-- <div
+                  class="relative w-full h-full cursor-pointer overflow-hidden"
+                >
                   <img
+                    :key="currentImageIndex[room.id]"
                     :src="room.images[currentImageIndex[room.id] || 0]"
                     :alt="`${room.name} view ${
                       currentImageIndex[room.id] + 1 || 1
                     }`"
-                    class="object-cover rounded-lg"
+                    class="object-cover w-full h-full rounded-lg absolute top-0 left-0"
                   />
                   <div
                     class="absolute inset-0 flex items-center justify-between p-2"
@@ -321,8 +342,8 @@ watch(data, calculateFilterCounts, { immediate: true });
                       <ChevronRight class="h-4 w-4" />
                     </Button>
                   </div>
-                </div>
-              </DialogTrigger>
+                </div> -->
+
               <DialogContent class="max-w-4xl">
                 <div class="grid gap-4">
                   <div class="relative aspect-video">

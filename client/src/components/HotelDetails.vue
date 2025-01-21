@@ -2,6 +2,15 @@
 import { ref } from "vue";
 import { Button } from "@/components/ui/button";
 import {
+  Carousel,
+  type CarouselApi,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+
+import {
   Wifi,
   PocketKnife,
   Spade,
@@ -15,6 +24,28 @@ import type { FunctionalComponent } from "vue";
 import type { LucideProps } from "lucide-vue-next";
 
 defineProps<{ hotel: HotelProps }>();
+
+const selectedIndex = ref(0);
+
+const emblaMainApi = ref<CarouselApi>();
+
+function onSelect() {
+  if (!emblaMainApi.value) return;
+  selectedIndex.value = emblaMainApi.value.selectedScrollSnap();
+}
+
+function onThumbClick(index: number) {
+  if (!emblaMainApi.value) return;
+  emblaMainApi.value.scrollTo(index);
+  selectedIndex.value = index;
+}
+
+function handleCarouselInit(val: CarouselApi) {
+  emblaMainApi.value = val;
+  onSelect();
+  emblaMainApi.value?.on("select", onSelect);
+  emblaMainApi.value?.on("reInit", onSelect);
+}
 
 type AmenityIconType = FunctionalComponent<LucideProps>;
 
@@ -41,7 +72,6 @@ interface HotelProps {
   amenities: string[];
 }
 
-const currentImage = ref(0);
 const testArray = [1, 2, 3, 4, 5];
 </script>
 <template>
@@ -51,26 +81,44 @@ const testArray = [1, 2, 3, 4, 5];
       <MapPin class="h-5 w-5 mr-2" />
       <span>{{ hotel.location }}</span>
     </div>
-    <div class="mb-6 relative">
-      <img
-        :src="hotel.images[currentImage]"
-        :alt="hotel.name"
-        width="800"
-        height="400"
-        class="rounded-lg"
+    <Carousel
+      class="relative w-full max-w-3xl mb-4"
+      @init-api="handleCarouselInit"
+    >
+      <CarouselContent>
+        <CarouselItem v-for="(img, index) in hotel.images" :key="img">
+          <img
+            :src="img"
+            class="rounded-lg h-[400px] w-[800px] object-cover"
+            :alt="hotel.name"
+          />
+        </CarouselItem>
+      </CarouselContent>
+      <CarouselPrevious
+        variant="secondary"
+        size="icon"
+        class="absolute left-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-lg"
+        @click.stop
       />
-      <div class="absolute bottom-4 left-4 right-4 flex justify-center">
-        <Button
-          v-for="(img, index) in hotel.images"
-          :key="img"
-          :variant="currentImage === index ? 'default' : 'secondary'"
-          size="sm"
-          class="mx-1"
-          @click="() => (currentImage = index)"
-        >
-          {{ index + 1 }}
-        </Button>
-      </div>
+      <CarouselNext
+        variant="secondary"
+        size="icon"
+        class="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-lg"
+        @click.stop
+      />
+    </Carousel>
+
+    <div class="flex justify-center mt-4">
+      <Button
+        v-for="(img, index) in hotel.images"
+        :key="img"
+        :variant="selectedIndex === index ? 'default' : 'secondary'"
+        size="sm"
+        class="mx-1"
+        @click="onThumbClick(index)"
+      >
+        {{ index + 1 }}
+      </Button>
     </div>
     <div class="flex items-center mb-4">
       <Star
