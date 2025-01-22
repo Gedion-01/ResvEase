@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import BookingFlow from "@/components/BookingFlow.vue";
 import HotelDetails from "@/components/HotelDetails.vue";
 import RoomSelection from "@/components/RoomSelection.vue";
 import SearchSection from "@/components/SearchSection.vue";
-import { useHotel, useRooms } from "@/services/queries";
+import { useHotel } from "@/services/queries";
 import { onMounted, onUnmounted, ref } from "vue";
 import { useRoute } from "vue-router";
 
@@ -60,9 +61,7 @@ if (error) {
           <RoomSelection :hotelId="id" :onRoomSelect="(roomId) => {}" />
         </div>
       </div>
-      <div class="md:sticky md:top-20 h-fit">
-        <BookingForm hotel="{mockHotel}" />
-      </div>
+      <div class="md:sticky md:top-24 h-fit"></div>
     </div>
   </div>
 </template>
