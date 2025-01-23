@@ -1,7 +1,11 @@
 <script setup lang="ts">
-import { defineComponent, ref, reactive, computed } from "vue";
+import { type Ref, ref, reactive, computed, watch } from "vue";
 import { useRouter } from "vue-router";
-import { format } from "date-fns";
+import { format, addDays } from "date-fns";
+import { useRoomBookingStore } from "@/store/bookingStore";
+import type { DateRange } from "radix-vue";
+import { RangeCalendar } from "@/components/ui/range-calendar";
+import { getLocalTimeZone, parseDate } from "@internationalized/date";
 
 import {
   Card,
@@ -11,25 +15,19 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 import { Checkbox } from "@/components/ui/checkbox";
 
-import {
-  Select,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectLabel,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-
 import { Separator } from "@/components/ui/separator";
 
 import {
@@ -39,6 +37,7 @@ import {
   Car,
   Wifi,
   AlertCircle,
+  Calendar,
 } from "lucide-vue-next";
 
 interface Room {
@@ -56,6 +55,7 @@ interface BookingFlowProps {
 }
 
 import { CheckCircle2 } from "lucide-vue-next";
+import { useSearchStore } from "@/store/searchStore";
 
 interface BookingFlowProps {
   room: Room;
@@ -68,6 +68,23 @@ const props = defineProps<BookingFlowProps>();
 const router = useRouter();
 const step = ref(1);
 const loading = ref(false);
+
+const bookingStore = useRoomBookingStore();
+const searchStore = useSearchStore();
+
+const timeZone = getLocalTimeZone();
+const start = searchStore.checkIn
+  ? parseDate(searchStore.checkIn)
+  : parseDate(new Date().toISOString().split("T")[0]);
+const end = searchStore.checkOut
+  ? parseDate(searchStore.checkOut)
+  : parseDate(addDays(new Date(), 1).toISOString().split("T")[0]);
+
+const value = ref({
+  start,
+  end,
+}) as Ref<DateRange>;
+
 const bookingData = reactive({
   firstName: "",
   lastName: "",
@@ -84,10 +101,14 @@ const bookingData = reactive({
 
 const numberOfNights = computed(() =>
   Math.ceil(
-    (props.checkOut.getTime() - props.checkIn.getTime()) / (1000 * 60 * 60 * 24)
+    ((value.value.end ? value.value.end.toDate(timeZone).getTime() : 0) -
+      (value.value.start ? value.value.start.toDate(timeZone).getTime() : 0)) /
+      (1000 * 60 * 60 * 24)
   )
 );
-const basePrice = computed(() => props.room.price * numberOfNights.value);
+const basePrice = computed(
+  () => bookingStore.room.price * numberOfNights.value
+);
 const taxRate = 0.12;
 const taxes = computed(() => basePrice.value * taxRate);
 const addonsPrice = computed(() => bookingData.addons.length * 25);
@@ -181,6 +202,39 @@ const nextStep = () => {
 const formatDate = (date: Date) => format(date, "MMM dd, yyyy");
 
 const findAddon = (id: string) => addons.find((addon) => addon.id === id);
+
+const formattedStart = computed(() => {
+  if (value?.value.start) {
+    return format(value?.value.start.toDate(timeZone), "iii, MMM dd");
+  }
+  return "";
+});
+const formattedEnd = computed(() => {
+  if (value?.value.end) {
+    return format(value?.value.end.toDate(timeZone), "iii, MMM dd");
+  }
+  return "";
+});
+
+watch(
+  value,
+  (newValue) => {
+    searchStore.checkIn = newValue.start
+      ? format(newValue.start.toDate(timeZone), "yyyy-MM-dd")
+      : "";
+    searchStore.checkOut = newValue.end
+      ? format(newValue.end.toDate(timeZone), "yyyy-MM-dd")
+      : "";
+    searchStore.setSearchParams({
+      location: searchStore.location,
+      checkIn: searchStore.checkIn,
+      checkOut: searchStore.checkOut,
+      adults: searchStore.adults,
+      children: searchStore.children,
+    });
+  },
+  { deep: true }
+);
 </script>
 
 <template>
@@ -233,22 +287,72 @@ const findAddon = (id: string) => addons.find((addon) => addon.id === id);
         <div class="grid gap-4">
           <div class="flex justify-between items-start">
             <div>
-              <h3 class="font-semibold">{{ room.name }}</h3>
-              <p class="text-sm text-muted-foreground">{{ room.bedType }}</p>
-              <div class="text-sm mt-1">
-                {{ formatDate(checkIn) }} - {{ formatDate(checkOut) }}
+              <h3 class="font-semibold">{{ bookingStore.room.name }}</h3>
+              <p class="text-sm text-muted-foreground">
+                {{ bookingStore.room.bedType }}
+              </p>
+              <!-- <div class="text-sm mt-1">
+                {{
+                  value?.start ? formatDate(value.start.toDate(timeZone)) : ""
+                }}
+                -
+                {{ value?.end ? formatDate(value.end.toDate(timeZone)) : "" }}
+              </div> -->
+              <div>
+                <Popover>
+                  <PopoverTrigger class="" asChild>
+                    <Button
+                      variant="ghost"
+                      :class="[
+                        'text-sm p-0 rounded-none  mb-1 hover:bg-transparent cursor-pointer border-b border-b-transparent hover:border-b-black/20 transition-all',
+                      ]"
+                    >
+                      <Calendar class="w-5 h-5 mr-0 text-gray-500" />
+                      <div class="flex items-center space-x-2">
+                        <div
+                          :class="[
+                            'font-medium',
+                            value?.start ? 'text-gray-900' : 'text-gray-400',
+                          ]"
+                        >
+                          {{ value?.start ? formattedStart : "Select date" }}
+                        </div>
+                        <span>-</span>
+                        <div
+                          :class="[
+                            'font-medium',
+                            value?.end ? 'text-gray-900' : 'text-gray-400',
+                          ]"
+                        >
+                          {{ value?.end ? formattedEnd : "Select date" }}
+                        </div>
+                      </div>
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent class="w-auto p-0" align="center">
+                    <div class="flex">
+                      <RangeCalendar
+                        v-model="value"
+                        class="rounded-md border"
+                      />
+                    </div>
+                  </PopoverContent>
+                </Popover>
               </div>
               <div class="text-sm text-muted-foreground">
                 {{ numberOfNights }} night{{ numberOfNights > 1 ? "s" : "" }}
               </div>
             </div>
             <div class="text-right">
-              <div class="font-semibold">${{ room.price }}/night</div>
+              <div class="font-semibold">
+                ${{ bookingStore.room.price }}/night
+              </div>
               <div class="text-sm text-muted-foreground">
                 Total: ${{ basePrice }}
               </div>
             </div>
           </div>
+          <div></div>
           <div v-if="bookingData.addons.length > 0">
             <Separator />
             <div>
