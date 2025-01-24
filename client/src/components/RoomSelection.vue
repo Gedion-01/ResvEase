@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, defineProps, reactive, watch } from "vue";
 import { useFilterStore } from "@/store/filterStore";
+import { useRoomBookingStore } from "@/store/bookingStore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +16,7 @@ import {
 import { Bed, Users, Wifi, Coffee, Utensils } from "lucide-vue-next";
 import { useRooms } from "@/services/queries";
 import { useRoute, useRouter } from "vue-router";
+import type { Room } from "@/types/hotel";
 
 const props = defineProps<{
   hotelId: string;
@@ -22,6 +24,7 @@ const props = defineProps<{
 }>();
 
 const filterStore = useFilterStore();
+const bookingStore = useRoomBookingStore();
 
 const route = useRoute();
 const router = useRouter();
@@ -68,10 +71,6 @@ const handleImageNavigation = (roomId: string, direction: "prev" | "next") => {
 };
 
 type Amenity = "Free Wi-Fi" | "Breakfast Included" | "Room Service" | string;
-
-interface Room {
-  amenities: Amenity[];
-}
 
 const getAmenityIcon = (amenity: Amenity) => {
   switch (amenity) {
@@ -221,6 +220,11 @@ const calculateFilterCounts = () => {
   });
 };
 watch(data, calculateFilterCounts, { immediate: true });
+
+const reserveRoom = (room: Room) => {
+  bookingStore.setRoomBookingDetails(room);
+  router.push("/booking");
+};
 </script>
 
 <template>
@@ -405,7 +409,10 @@ watch(data, calculateFilterCounts, { immediate: true });
                 <span class="text-2xl font-bold">{{ room.price }}</span>
                 <span class="text-muted-foreground">/night</span>
               </div>
-              <Button
+              <Button @click="reserveRoom(room)" variant="default">
+                Reserve</Button
+              >
+              <!-- <Button
                 @click="
                   () => {
                     selectedRoom = room.id;
@@ -415,7 +422,7 @@ watch(data, calculateFilterCounts, { immediate: true });
                 :variant="selectedRoom === room.id ? 'default' : 'outline'"
               >
                 Select Room
-              </Button>
+              </Button> -->
             </div>
           </div>
         </div>

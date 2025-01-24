@@ -23,7 +23,7 @@ const router = createRouter({
       component: HotelView,
     },
     {
-      path: "/book",
+      path: "/booking",
       name: "Book",
       component: BookView,
     },

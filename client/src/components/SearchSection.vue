@@ -3,7 +3,7 @@ import { useRoute, useRouter, type RouteParams } from "vue-router";
 import type { DateRange } from "radix-vue";
 import { RangeCalendar } from "@/components/ui/range-calendar";
 import { getLocalTimeZone, parseDate } from "@internationalized/date";
-import { type Ref, ref, computed, reactive } from "vue";
+import { type Ref, ref, computed, reactive, watch } from "vue";
 import { useSearchStore } from "@/store/searchStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -138,6 +138,53 @@ const handleSearch = async () => {
     router.replace({ name: "SearchResults", query });
   }
 };
+
+watch(location, (newLocation) => {
+  searchStore.location = newLocation;
+  searchStore.setSearchParams({
+    location: newLocation,
+    checkIn: searchStore.checkIn,
+    checkOut: searchStore.checkOut,
+    adults: searchStore.adults,
+    children: searchStore.children,
+  });
+});
+
+watch(
+  value,
+  (newValue) => {
+    searchStore.checkIn = newValue.start
+      ? format(newValue.start.toDate(timeZone), "yyyy-MM-dd")
+      : "";
+    searchStore.checkOut = newValue.end
+      ? format(newValue.end.toDate(timeZone), "yyyy-MM-dd")
+      : "";
+    searchStore.setSearchParams({
+      location: searchStore.location,
+      checkIn: searchStore.checkIn,
+      checkOut: searchStore.checkOut,
+      adults: searchStore.adults,
+      children: searchStore.children,
+    });
+  },
+  { deep: true }
+);
+
+watch(
+  guests,
+  (newGuests) => {
+    searchStore.adults = newGuests.adults;
+    searchStore.children = newGuests.children;
+    searchStore.setSearchParams({
+      location: searchStore.location,
+      checkIn: searchStore.checkIn,
+      checkOut: searchStore.checkOut,
+      adults: searchStore.adults,
+      children: searchStore.children,
+    });
+  },
+  { deep: true }
+);
 </script>
 
 <template>
