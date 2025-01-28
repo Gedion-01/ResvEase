@@ -13,7 +13,32 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
-import { Bed, Users, Wifi, Coffee, Utensils } from "lucide-vue-next";
+import {
+  Bed,
+  Users,
+  Wifi,
+  Coffee,
+  Utensils,
+  ParkingCircle,
+  Dog,
+  Martini,
+  Thermometer,
+  Baby,
+  Plane,
+  WashingMachine,
+  Anchor,
+  Music,
+  PocketKnife,
+  Spade,
+  Dumbbell,
+  Umbrella,
+  Bath,
+  Mountain,
+  Waves,
+  Building,
+  ShowerHead,
+} from "lucide-vue-next";
+
 import { useRooms } from "@/services/queries";
 import { useRoute, useRouter } from "vue-router";
 import type { Room } from "@/types/hotel";
@@ -76,10 +101,50 @@ const getAmenityIcon = (amenity: Amenity) => {
   switch (amenity) {
     case "Free Wi-Fi":
       return Wifi;
+    case "Swimming Pool":
+      return PocketKnife; // Using PocketKnife as a substitute for Pool
+    case "Spa":
+      return Spade; // Using Spade as a substitute for Spa
+    case "Gym":
+      return Dumbbell;
+    case "Free Parking":
+      return ParkingCircle;
     case "Breakfast Included":
       return Coffee;
-    case "Room Service":
+    case "Pet Friendly":
+      return Dog;
+    case "Rooftop Bar":
+      return Martini;
+    case "Outdoor swimming pool":
+      return PocketKnife; // Using PocketKnife as a substitute for Pool
+    case "Sauna":
+      return Thermometer;
+    case "24/7 Room Service":
       return Utensils;
+    case "Kids' Play Area":
+      return Baby;
+    case "Airport Shuttle":
+      return Plane;
+    case "Laundry Service":
+      return WashingMachine;
+    case "Beach Access":
+      return Umbrella;
+    case "Water Sports":
+      return Anchor;
+    case "Live Entertainment":
+      return Music;
+    case "Air conditioning":
+      return Thermometer;
+    case "Private bathroom":
+      return Bath;
+    case "Mountain view":
+      return Mountain;
+    case "Ocean view":
+      return Waves;
+    case "City view":
+      return Building;
+    case "Shower":
+      return ShowerHead;
     default:
       return null;
   }
@@ -242,8 +307,8 @@ const reserveRoom = (room: Room) => {
           Clear all filters
         </Button>
       </div>
-      <ScrollArea class="w-full whitespace-nowrap rounded-md border">
-        <div class="flex w-max space-x-2 p-4">
+      <ScrollArea class="w-full whitespace-nowrap rounded-md">
+        <div class="flex w-max space-x-2 py-4">
           <Badge
             v-for="filter in filters"
             :key="filter.id"
@@ -271,13 +336,14 @@ const reserveRoom = (room: Room) => {
       <CardHeader>
         <div class="flex justify-between items-start">
           <div>
-            <CardTitle>{{ room.name }}</CardTitle>
+            <CardTitle class="whitespace-wrap">{{ room.name }}</CardTitle>
             <p class="text-sm text-muted-foreground mt-1">
               {{ room.description }}
             </p>
           </div>
           <Badge
             :variant="room.availableCount < 3 ? 'destructive' : 'secondary'"
+            class="whitespace-nowrap"
           >
             {{ room.availableCount }} rooms left
           </Badge>
@@ -285,11 +351,12 @@ const reserveRoom = (room: Room) => {
       </CardHeader>
       <CardContent>
         <div class="grid md:grid-cols-2 gap-6">
-          <div class="relative aspect-video">
+          <div class="relative">
             <Dialog>
-              <Carousel class="relative w-full h-auto cursor-pointer">
+              <Carousel class="relative cursor-pointer">
                 <CarouselContent>
                   <CarouselItem
+                    class="relative aspect-video"
                     v-for="(image, index) in room.images"
                     :key="index"
                   >
@@ -315,48 +382,15 @@ const reserveRoom = (room: Room) => {
                   @click.stop
                 />
               </Carousel>
-              <!-- <div
-                  class="relative w-full h-full cursor-pointer overflow-hidden"
-                >
-                  <img
-                    :key="currentImageIndex[room.id]"
-                    :src="room.images[currentImageIndex[room.id] || 0]"
-                    :alt="`${room.name} view ${
-                      currentImageIndex[room.id] + 1 || 1
-                    }`"
-                    class="object-cover w-full h-full rounded-lg absolute top-0 left-0"
-                  />
-                  <div
-                    class="absolute inset-0 flex items-center justify-between p-2"
-                  >
-                    <Button
-                      variant="secondary"
-                      size="icon"
-                      class="opacity-80 hover:opacity-100"
-                      @click.stop="handleImageNavigation(room.id, 'prev')"
-                    >
-                      <ChevronLeft class="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      size="icon"
-                      class="opacity-80 hover:opacity-100"
-                      @click.stop="handleImageNavigation(room.id, 'next')"
-                    >
-                      <ChevronRight class="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div> -->
-
               <DialogContent class="max-w-4xl">
                 <div class="grid gap-4">
-                  <div class="relative aspect-video">
+                  <div class="relative w-full h-64 md:h-auto">
                     <img
                       :src="room.images[currentImageIndex[room.id] || 0]"
                       :alt="`${room.name} view ${
                         currentImageIndex[room.id] + 1 || 1
                       }`"
-                      class="object-contain"
+                      class="object-contain w-full h-full rounded-lg"
                     />
                   </div>
                   <div class="grid grid-cols-3 gap-2">
@@ -364,9 +398,9 @@ const reserveRoom = (room: Room) => {
                       v-for="(roomImg, index) in room.images"
                       :key="roomImg"
                       :class="[
-                        'relative aspect-video cursor-pointer',
+                        'relative cursor-pointer',
                         index === (currentImageIndex[room.id] || 0)
-                          ? 'ring-2 ring-primary'
+                          ? 'ring-2 ring-primary rounded-lg'
                           : '',
                       ]"
                       @click="currentImageIndex[room.id] = index"
@@ -374,7 +408,7 @@ const reserveRoom = (room: Room) => {
                       <img
                         :src="roomImg"
                         :alt="`${room.name} view ${index + 1}`"
-                        class="object-cover rounded"
+                        class="object-cover w-full h-full rounded-lg"
                       />
                     </div>
                   </div>
@@ -412,17 +446,6 @@ const reserveRoom = (room: Room) => {
               <Button @click="reserveRoom(room)" variant="default">
                 Reserve</Button
               >
-              <!-- <Button
-                @click="
-                  () => {
-                    selectedRoom = room.id;
-                    props.onRoomSelect(room.id);
-                  }
-                "
-                :variant="selectedRoom === room.id ? 'default' : 'outline'"
-              >
-                Select Room
-              </Button> -->
             </div>
           </div>
         </div>
