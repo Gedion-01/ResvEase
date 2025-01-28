@@ -124,7 +124,10 @@ func (s *MongoHotelStore) GetHotels(ctx context.Context, filter Map, page *Pagin
 		return nil, fmt.Errorf("cursor error: %v", err)
 	}
 
+	fmt.Println("hotels")
+
 	if len(hotels) == 0 {
+		fmt.Println("hotel resource not found")
 		return nil, fmt.Errorf("hotel resource not found")
 	}
 

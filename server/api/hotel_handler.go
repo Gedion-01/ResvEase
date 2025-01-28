@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"hotel-reservation/db"
 	"net/http"
 	"strconv"
@@ -222,6 +223,7 @@ type HotelQueryParams struct {
 }
 
 func (h *HotelHandler) HandleGetHotels(c *fiber.Ctx) error {
+	fmt.Println("HandleGetHotels")
 	var params HotelQueryParams
 	if err := c.QueryParser(&params); err != nil {
 		return ErrBadRequest()
