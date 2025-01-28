@@ -19,6 +19,16 @@ import {
   Umbrella,
   MapPin,
   Star,
+  ParkingCircle,
+  Coffee,
+  Dog,
+  Martini,
+  Thermometer,
+  Baby,
+  Plane,
+  WashingMachine,
+  Anchor,
+  Music,
 } from "lucide-vue-next";
 import type { FunctionalComponent } from "vue";
 import type { LucideProps } from "lucide-vue-next";
@@ -51,15 +61,27 @@ type AmenityIconType = FunctionalComponent<LucideProps>;
 
 const amenityIcons: { [key: string]: AmenityIconType } = {
   "Free Wi-Fi": Wifi,
-  "Swimming Pool": PocketKnife, // Using PocketKnife as a substitute for Pool
-  Spa: Spade, // Using Spade as a substitute for Spa
+  "Swimming Pool": PocketKnife,
+  Spa: Spade,
   Restaurant: Utensils,
   "Fitness Center": Dumbbell,
   "Beach Access": Umbrella,
+  "Free Parking": ParkingCircle,
+  "Breakfast Included": Coffee,
+  "Pet Friendly": Dog,
+  "Rooftop Bar": Martini,
+  "Outdoor swimming pool": PocketKnife,
+  Sauna: Thermometer,
+  "24/7 Room Service": Utensils,
+  "Kids' Play Area": Baby,
+  "Airport Shuttle": Plane,
+  "Laundry Service": WashingMachine,
+  "Water Sports": Anchor,
+  "Live Entertainment": Music,
 };
 
 const getAmenityIcon = (amenity: string): AmenityIconType => {
-  return amenityIcons[amenity] || MapPin; // Default to MapPin if no icon is found
+  return amenityIcons[amenity] || MapPin;
 };
 
 interface HotelProps {
