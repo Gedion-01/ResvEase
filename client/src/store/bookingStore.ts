@@ -1,4 +1,4 @@
-import type { Room } from "@/types/hotel";
+import type { Hotel, Room } from "@/types/hotel";
 import { defineStore } from "pinia";
 
 export const useRoomBookingStore = defineStore("roomBooking", {
@@ -15,20 +15,14 @@ export const useRoomBookingStore = defineStore("roomBooking", {
       amenities: [],
       images: [],
     } as Room,
-    hotel: {
-      name: "",
-      rating: 0,
-    },
+    hotel: {} as Hotel,
   }),
   actions: {
     setRoomBookingDetails(room: Room) {
       this.room = room;
     },
-    setHotelBookingDetails(name: string, rating: number) {
-      this.hotel = {
-        name,
-        rating,
-      };
+    setHotelBookingDetails(hotel: Hotel) {
+      this.hotel = hotel;
     },
   },
 });

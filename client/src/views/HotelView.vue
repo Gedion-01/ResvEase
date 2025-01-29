@@ -57,9 +57,7 @@ if (error) {
     >
       <div class="md:col-span-2" v-if="data">
         <HotelDetails :hotel="data" />
-        <div class="mt-8">
-          <RoomSelection :hotelId="id" :onRoomSelect="(roomId) => {}" />
-        </div>
+        <div class="mt-8"><RoomSelection :hotel="data" /></div>
       </div>
       <div class="md:sticky md:top-24 h-fit"></div>
     </div>

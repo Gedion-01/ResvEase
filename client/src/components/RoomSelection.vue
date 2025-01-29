@@ -41,11 +41,10 @@ import {
 
 import { useRooms } from "@/services/queries";
 import { useRoute, useRouter } from "vue-router";
-import type { Room } from "@/types/hotel";
+import type { Hotel, Room } from "@/types/hotel";
 
 const props = defineProps<{
-  hotelId: string;
-  onRoomSelect: (roomId: string) => void;
+  hotel: Hotel;
 }>();
 
 const filterStore = useFilterStore();
@@ -72,7 +71,7 @@ const queryParams = reactive({
 });
 
 const { data, isLoading, isFetching, refetch } = useRooms(
-  props.hotelId,
+  props.hotel.id,
   queryParams
 );
 
@@ -95,9 +94,7 @@ const handleImageNavigation = (roomId: string, direction: "prev" | "next") => {
   currentImageIndex.value[roomId] = newIndex;
 };
 
-type Amenity = "Free Wi-Fi" | "Breakfast Included" | "Room Service" | string;
-
-const getAmenityIcon = (amenity: Amenity) => {
+const getAmenityIcon = (amenity: string) => {
   switch (amenity) {
     case "Free Wi-Fi":
       return Wifi;
@@ -288,6 +285,7 @@ watch(data, calculateFilterCounts, { immediate: true });
 
 const reserveRoom = (room: Room) => {
   bookingStore.setRoomBookingDetails(room);
+  bookingStore.setHotelBookingDetails(props.hotel);
   router.push("/booking");
 };
 </script>
@@ -323,7 +321,13 @@ const reserveRoom = (room: Room) => {
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
     </div>
-    <div v-if="isLoading || isFetching">Loading...</div>
+    <div v-if="isFetching">Loading...</div>
+    <div
+      v-else-if="!data?.data || data.data.length === 0"
+      class="text-center text-gray-500"
+    >
+      No rooms available.
+    </div>
     <Card
       v-else
       v-for="room in data?.data"
@@ -431,9 +435,8 @@ const reserveRoom = (room: Room) => {
                 class="flex items-center gap-1"
               >
                 <component
-                  v-if="getAmenityIcon(amenity)"
                   :is="getAmenityIcon(amenity)"
-                  class="h-4 w-4"
+                  class="h-4 w-4 text-blue-500"
                 />
                 {{ amenity }}
               </Badge>

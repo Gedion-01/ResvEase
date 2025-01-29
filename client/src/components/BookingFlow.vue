@@ -36,8 +36,28 @@ import {
   Coffee,
   Car,
   Wifi,
-  AlertCircle,
   Calendar,
+  PocketKnife,
+  Spade,
+  Utensils,
+  Dumbbell,
+  Umbrella,
+  ParkingCircle,
+  Dog,
+  Martini,
+  Thermometer,
+  Baby,
+  Plane,
+  WashingMachine,
+  Anchor,
+  Music,
+  MapPin,
+  Star,
+  Minus,
+  Bath,
+  Mountain,
+  Waves,
+  ShowerHead,
 } from "lucide-vue-next";
 
 interface Room {
@@ -235,157 +255,260 @@ watch(
   },
   { deep: true }
 );
+
+const getAmenityIcon = (amenity: string) => {
+  switch (amenity) {
+    case "Free Wi-Fi":
+      return Wifi;
+    case "Swimming Pool":
+      return PocketKnife; // Using PocketKnife as a substitute for Pool
+    case "Spa":
+      return Spade; // Using Spade as a substitute for Spa
+    case "Gym":
+      return Dumbbell;
+    case "Free Parking":
+      return ParkingCircle;
+    case "Breakfast Included":
+      return Coffee;
+    case "Pet Friendly":
+      return Dog;
+    case "Rooftop Bar":
+      return Martini;
+    case "Outdoor swimming pool":
+      return PocketKnife; // Using PocketKnife as a substitute for Pool
+    case "Sauna":
+      return Thermometer;
+    case "24/7 Room Service":
+      return Utensils;
+    case "Kids' Play Area":
+      return Baby;
+    case "Airport Shuttle":
+      return Plane;
+    case "Laundry Service":
+      return WashingMachine;
+    case "Beach Access":
+      return Umbrella;
+    case "Water Sports":
+      return Anchor;
+    case "Live Entertainment":
+      return Music;
+    case "Air conditioning":
+      return Thermometer;
+    case "Private bathroom":
+      return Bath;
+    case "Mountain view":
+      return Mountain;
+    case "Ocean view":
+      return Waves;
+    case "City view":
+      return Building;
+    case "Shower":
+      return ShowerHead;
+    default:
+      return null;
+  }
+};
 </script>
 
 <template>
-  <div class="max-w-3xl mx-auto">
-    <!-- Progress Steps -->
-    <div class="mb-8">
-      <div class="flex justify-between">
+  <div class="max-w-3xl mx-auto py-8">
+    <div
+      class="mb-8 px-4 py-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg shadow-md"
+    >
+      <div class="flex justify-between relative">
         <div
-          v-for="(label, index) in ['Guest Information', 'Extras', 'Payment']"
+          v-for="(label, index) in ['Guest Info', 'Extras', 'Payment']"
           :key="label"
-          class="flex flex-col items-center"
+          class="flex flex-col justify-between relative z-10"
         >
           <div
             :class="[
-              'w-8 h-8 rounded-full flex items-center justify-center mb-2',
+              'w-10 h-10 sm:w-12 sm:h-12 rounded-full flex items-center justify-center mb-2 sm:mb-3 transition-all duration-300 ease-in-out transform',
               step > index + 1
-                ? 'bg-green-500 text-white'
+                ? 'bg-green-500 text-white scale-105 sm:scale-110'
                 : step === index + 1
                 ? 'bg-primary text-primary-foreground'
-                : 'bg-muted text-muted-foreground',
+                : 'bg-white text-gray-400 border-2 border-gray-200',
             ]"
           >
             <component
               :is="step > index + 1 ? CheckCircle2 : 'span'"
-              :class="{ 'w-5 h-5': step > index + 1 }"
+              :class="[
+                step > index + 1
+                  ? 'w-5 h-5 sm:w-6 sm:h-6'
+                  : 'text-base sm:text-lg font-semibold',
+                step === index + 1 ? 'animate-pulse' : '',
+              ]"
             >
               {{ step > index + 1 ? "" : index + 1 }}
             </component>
           </div>
-          <span class="text-sm">{{ label }}</span>
+          <span
+            :class="[
+              'text-xs sm:text-sm font-medium transition-all duration-300 ease-in-out text-center',
+              step >= index + 1 ? 'text-primary' : 'text-gray-500',
+            ]"
+          >
+            {{ label }}
+          </span>
         </div>
-      </div>
-      <div class="relative mt-2">
+
+        <!-- Progress Line -->
         <div
-          class="absolute top-1/2 h-0.5 w-full bg-muted -translate-y-1/2"
-        ></div>
-        <div
-          class="absolute top-1/2 h-0.5 bg-primary -translate-y-1/2 transition-all duration-300"
-          :style="{ width: `${((step - 1) / 2) * 100}%` }"
-        ></div>
+          class="absolute top-5 sm:top-6 left-0 w-full h-0.5 bg-gray-200 rounded"
+        >
+          <div
+            class="h-full bg-primary rounded transition-all duration-500 ease-in-out"
+            :style="{ width: `${((step - 1) / 2) * 100}%` }"
+          ></div>
+        </div>
       </div>
     </div>
 
-    <!-- Booking Summary -->
-    <Card class="mb-6">
-      <CardHeader>
-        <CardTitle>Booking Summary</CardTitle>
+    <Card class="mb-6 overflow-hidden">
+      <CardHeader
+        class="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-0"
+      >
+        <div class="relative h-48 w-full">
+          <img
+            :src="bookingStore.hotel.images[0]"
+            class="absolute inset-0 w-full h-full object-cover"
+            :alt="bookingStore.hotel.name"
+          />
+          <div class="absolute inset-0 bg-black bg-opacity-50"></div>
+          <div class="absolute bottom-0 left-0 p-6 space-y-2">
+            <CardTitle class="text-3xl font-bold text-white">{{
+              bookingStore.hotel.name
+            }}</CardTitle>
+            <div class="flex items-center text-white/90">
+              <MapPin class="h-5 w-5 mr-2" />
+              <span>{{ bookingStore.hotel.location }}</span>
+            </div>
+          </div>
+        </div>
       </CardHeader>
-      <CardContent>
-        <div class="grid gap-4">
-          <div class="flex justify-between items-start">
-            <div>
-              <h3 class="font-semibold">{{ bookingStore.room.name }}</h3>
-              <p class="text-sm text-muted-foreground">
-                {{ bookingStore.room.bedType }}
-              </p>
-              <!-- <div class="text-sm mt-1">
-                {{
-                  value?.start ? formatDate(value.start.toDate(timeZone)) : ""
-                }}
-                -
-                {{ value?.end ? formatDate(value.end.toDate(timeZone)) : "" }}
-              </div> -->
-              <div>
-                <Popover>
-                  <PopoverTrigger class="" asChild>
-                    <Button
-                      variant="ghost"
-                      :class="[
-                        'text-sm p-0 rounded-none  mb-1 hover:bg-transparent cursor-pointer border-b border-b-transparent hover:border-b-black/20 transition-all',
-                      ]"
-                    >
-                      <Calendar class="w-5 h-5 mr-0 text-gray-500" />
-                      <div class="flex items-center space-x-2">
-                        <div
-                          :class="[
-                            'font-medium',
-                            value?.start ? 'text-gray-900' : 'text-gray-400',
-                          ]"
-                        >
-                          {{ value?.start ? formattedStart : "Select date" }}
-                        </div>
-                        <span>-</span>
-                        <div
-                          :class="[
-                            'font-medium',
-                            value?.end ? 'text-gray-900' : 'text-gray-400',
-                          ]"
-                        >
-                          {{ value?.end ? formattedEnd : "Select date" }}
-                        </div>
-                      </div>
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent class="w-auto p-0" align="center">
-                    <div class="flex">
-                      <RangeCalendar
-                        v-model="value"
-                        class="rounded-md border"
-                      />
-                    </div>
-                  </PopoverContent>
-                </Popover>
+      <CardContent class="p-6">
+        <div class="grid gap-6 md:grid-cols-2">
+          <!-- Hotel Information -->
+          <div class="space-y-4">
+            <div class="flex items-center">
+              <div class="flex">
+                <Star
+                  v-for="(val, index) in [1, 2, 3, 4, 5]"
+                  :key="index"
+                  :class="[
+                    'h-5 w-5',
+                    index < Math.floor(bookingStore.hotel.rating)
+                      ? 'text-yellow-400 fill-current'
+                      : 'text-gray-300',
+                  ]"
+                />
               </div>
-              <div class="text-sm text-muted-foreground">
-                {{ numberOfNights }} night{{ numberOfNights > 1 ? "s" : "" }}
-              </div>
+              <span class="ml-2 text-sm font-medium text-gray-600">
+                {{ bookingStore.hotel.rating.toFixed(1) }}
+              </span>
             </div>
-            <div class="text-right">
-              <div class="font-semibold">
-                ${{ bookingStore.room.price }}/night
-              </div>
-              <div class="text-sm text-muted-foreground">
-                Total: ${{ basePrice }}
-              </div>
-            </div>
-          </div>
-          <div></div>
-          <div v-if="bookingData.addons.length > 0">
-            <Separator />
-            <div>
-              <h4 class="font-semibold mb-2">Selected Extras</h4>
+            <h4 class="text-xl font-semibold text-gray-800">
+              {{ bookingStore.room.name }}
+            </h4>
+            <div class="grid grid-cols-2 gap-3">
               <div
-                v-for="addonId in bookingData.addons"
-                :key="addonId"
-                class="flex justify-between text-sm"
+                v-for="amenity in bookingStore.room.amenities"
+                :key="amenity"
+                class="flex items-center bg-gray-100 rounded-full px-3 py-1"
               >
-                <span>{{ findAddon(addonId)?.title }}</span>
-                <span>${{ findAddon(addonId)?.price }}</span>
+                <component
+                  :is="getAmenityIcon(amenity)"
+                  class="h-4 w-4 text-blue-500"
+                />
+                <span class="ml-2 text-sm text-gray-700">{{ amenity }}</span>
               </div>
             </div>
           </div>
-          <Separator />
-          <div class="space-y-1.5">
-            <div class="flex justify-between text-sm">
-              <span>Subtotal</span>
-              <span>${{ basePrice + addonsPrice }}</span>
+
+          <!-- Price Information -->
+          <div class="space-y-4 flex flex-col justify-between">
+            <div class="md:text-right">
+              <div class="text-3xl font-bold text-gray-800">
+                ${{ bookingStore.room.price }}
+              </div>
+              <div class="text-sm text-gray-600">per night</div>
             </div>
-            <div class="flex justify-between text-sm">
-              <span>Taxes & Fees ({{ (taxRate * 100).toFixed(0) }}%)</span>
-              <span>${{ taxes.toFixed(2) }}</span>
+            <div class="flex md:justify-end items-end">
+              <Popover>
+                <PopoverTrigger class="" asChild>
+                  <Button
+                    variant="outline"
+                    class="justify-start text-left font-normal"
+                  >
+                    <Calendar class="w-5 h-5 mr-2 text-gray-500" />
+                    <div class="flex items-center">
+                      <div
+                        :class="[
+                          'font-medium',
+                          value?.start ? 'text-gray-900' : 'text-gray-400',
+                        ]"
+                      >
+                        {{ value?.start ? formattedStart : "Check-in" }}
+                      </div>
+                      <Minus class="mx-2 h-4 w-4 text-gray-400" />
+                      <div
+                        :class="[
+                          'font-medium',
+                          value?.end ? 'text-gray-900' : 'text-gray-400',
+                        ]"
+                      >
+                        {{ value?.end ? formattedEnd : "Check-out" }}
+                      </div>
+                    </div>
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent class="w-auto p-0" align="center">
+                  <RangeCalendar v-model="value" class="rounded-md border" />
+                </PopoverContent>
+              </Popover>
             </div>
-            <div class="flex justify-between font-semibold">
-              <span>Total</span>
-              <span>${{ totalPrice.toFixed(2) }}</span>
+            <div class="text-sm text-gray-600 md:text-right">
+              {{ numberOfNights }} night{{ numberOfNights > 1 ? "s" : "" }}
             </div>
+          </div>
+        </div>
+
+        <Separator class="my-6" />
+
+        <!-- Selected Extras -->
+        <div v-if="bookingData.addons.length > 0" class="space-y-2 mb-6">
+          <h4 class="font-semibold text-gray-800">Selected Extras</h4>
+          <div
+            v-for="addonId in bookingData.addons"
+            :key="addonId"
+            class="flex justify-between text-sm"
+          >
+            <span class="text-gray-600">{{ findAddon(addonId)?.title }}</span>
+            <span class="font-medium">${{ findAddon(addonId)?.price }}</span>
+          </div>
+        </div>
+
+        <!-- Price Breakdown -->
+        <div class="space-y-2">
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-600">Subtotal</span>
+            <span class="font-medium">${{ basePrice + addonsPrice }}</span>
+          </div>
+          <div class="flex justify-between text-sm">
+            <span class="text-gray-600"
+              >Taxes & Fees ({{ (taxRate * 100).toFixed(0) }}%)</span
+            >
+            <span class="font-medium">${{ taxes.toFixed(2) }}</span>
+          </div>
+          <Separator class="my-2" />
+          <div class="flex justify-between text-lg font-bold text-gray-800">
+            <span>Total</span>
+            <span>${{ totalPrice.toFixed(2) }}</span>
           </div>
         </div>
       </CardContent>
     </Card>
-
     <!-- Step Content -->
     <Card>
       <CardHeader>
@@ -441,15 +564,17 @@ watch(
                 class="flex items-start space-x-4 p-4 border rounded-lg cursor-pointer hover:bg-accent"
                 @click="handleAddonToggle(addon.id)"
               >
-                <div
-                  :class="[
-                    'rounded-full p-2',
-                    bookingData.addons.includes(addon.id)
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted',
-                  ]"
-                >
-                  <addon.icon class="w-4 h-4" />
+                <div class="">
+                  <div
+                    :class="[
+                      'rounded-full p-2',
+                      bookingData.addons.includes(addon.id)
+                        ? 'bg-primary text-primary-foreground'
+                        : 'bg-muted',
+                    ]"
+                  >
+                    <addon.icon class="w-4 h-4" />
+                  </div>
                 </div>
                 <div class="flex-1">
                   <div class="flex justify-between">
