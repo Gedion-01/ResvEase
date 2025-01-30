@@ -3,7 +3,7 @@
 import { useRoute, useRouter, type RouteParams } from "vue-router";
 import type { Dayjs } from "dayjs";
 import { Calendar as CalendarIcon } from "lucide-vue-next";
-import { type Ref, ref, computed, reactive, watch } from "vue";
+import { type Ref, ref, computed, reactive, watch, onMounted } from "vue";
 import { useSearchStore } from "@/store/searchStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,7 +27,7 @@ searchStore.loadSearchParams();
 const filterStore = useFilterStore();
 filterStore.loadFilterParams();
 
-defineProps({
+const props = defineProps({
   isSticky: {
     default: false,
     type: Boolean,
@@ -230,16 +230,15 @@ const size = ref<"default" | "large" | "small">("default");
       </div>
 
       <div class="md:col-span-3">
-        <div class="flex">
+        <div class="flex h-full">
           <el-date-picker
             v-model="value"
             type="daterange"
             range-separator="To"
             start-placeholder="Start date"
             end-placeholder="End date"
-            :size="size"
             :disabled-date="isDateUnavailable"
-            class="rounded-md border"
+            class="rounded-md"
           />
         </div>
       </div>
@@ -335,16 +334,6 @@ const size = ref<"default" | "large" | "small">("default");
       v-if="route.fullPath == '/' || route.fullPath.includes('/search')"
       class="mt-4 flex items-center justify-between container"
     >
-      <!-- <div class="flex gap-2 overflow-x-auto pb-2">
-        <Badge
-          v-for="filter in quickFilters"
-          :key="filter"
-          variant="outline"
-          class="cursor-pointer hover:bg-primary hover:text-primary-foreground"
-        >
-          {{ filter }}
-        </Badge>
-      </div> -->
       <div class="flex items-center gap-2">
         <Button
           :variant="viewMode === 'list' ? 'default' : 'outline'"
@@ -367,8 +356,4 @@ const size = ref<"default" | "large" | "small">("default");
   </div>
 </template>
 
-<style scoped>
-::v-deep(.el-picker-panel .el-date-table td.in-range) {
-  background-color: #649dae !important;
-}
-</style>
+<style scoped></style>
