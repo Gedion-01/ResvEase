@@ -12,11 +12,14 @@
   },
   "dependencies": {
     "@tanstack/vue-query": "^5.62.9",
+    "@vuepic/vue-datepicker": "^11.0.1",
     "@vueuse/core": "^12.4.0",
     "axios": "^1.7.9",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
+    "date-fns-tz": "^3.2.0",
+    "element-plus": "^2.9.3",
     "embla-carousel-vue": "^8.5.2",
     "lucide-vue-next": "^0.469.0",
     "pinia": "^2.3.0",
@@ -25,6 +28,7 @@
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
     "vue": "^3.5.13",
+    "vue-day-picker": "^1.0.9",
     "vue-router": "^4.5.0"
   },
   "devDependencies": {
