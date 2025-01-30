@@ -1,8 +1,8 @@
+<!-- filepath: /home/gedion/Documents/Projects/Hotel-Reservation-App/client/src/components/SearchSection.vue -->
 <script setup lang="ts">
 import { useRoute, useRouter, type RouteParams } from "vue-router";
-import type { DateRange } from "radix-vue";
-import { RangeCalendar } from "@/components/ui/range-calendar";
-import { getLocalTimeZone, parseDate } from "@internationalized/date";
+import type { Dayjs } from "dayjs";
+import { Calendar as CalendarIcon } from "lucide-vue-next";
 import { type Ref, ref, computed, reactive, watch } from "vue";
 import { useSearchStore } from "@/store/searchStore";
 import { Button } from "@/components/ui/button";
@@ -15,9 +15,11 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Search } from "lucide-vue-next";
-import { addDays, format } from "date-fns";
+import { addDays, format, isBefore } from "date-fns";
+import { getLocalTimeZone } from "@internationalized/date";
 import { useQueryClient } from "@tanstack/vue-query";
 import { useFilterStore } from "@/store/filterStore";
+import { ElDatePicker, parseDate } from "element-plus"; // Import the ElDatePicker component
 
 const searchStore = useSearchStore();
 searchStore.loadSearchParams();
@@ -47,36 +49,44 @@ const viewMode = ref<"list" | "map">("list");
 
 const timeZone = getLocalTimeZone();
 const start = searchStore.checkIn
-  ? parseDate(searchStore.checkIn)
-  : parseDate(new Date().toISOString().split("T")[0]);
+  ? parseDate(searchStore.checkIn, "yyyy-MM-dd", new Date().toISOString())
+  : parseDate(
+      new Date().toISOString().split("T")[0],
+      "yyyy-MM-dd",
+      new Date().toISOString()
+    );
 const end = searchStore.checkOut
-  ? parseDate(searchStore.checkOut)
-  : parseDate(addDays(new Date(), 1).toISOString().split("T")[0]);
+  ? parseDate(searchStore.checkOut, "yyyy-MM-dd", new Date().toISOString())
+  : parseDate(
+      addDays(new Date(), 1).toISOString().split("T")[0],
+      "yyyy-MM-dd",
+      new Date().toISOString()
+    );
 
-const value = ref({
-  start,
-  end,
-}) as Ref<DateRange>;
+const value = ref<[Date, Date]>([
+  start ? start.toDate() : new Date(),
+  end ? end.toDate() : addDays(new Date(), 1),
+]);
 
 const formattedStart = computed(() => {
-  if (value?.value.start) {
-    return format(value?.value.start.toDate(timeZone), "iii, MMM dd");
+  if (value.value[0]) {
+    return format(value.value[0], "iii, MMM dd");
   }
   return "";
 });
 const formattedEnd = computed(() => {
-  if (value?.value.end) {
-    return format(value?.value.end.toDate(timeZone), "iii, MMM dd");
+  if (value.value[1]) {
+    return format(value.value[1], "iii, MMM dd");
   }
   return "";
 });
 
 const calculateNights = computed(() => {
-  if (value?.value.start && value.value.end) {
-    const startDate = value.value.start.toDate(timeZone);
-    const endDate = value.value.end.toDate(timeZone);
+  if (value.value[0] && value.value[1]) {
+    const startDate = value.value[0];
+    const endDate = value.value[1];
     return Math.ceil(
-      (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+      (endDate.valueOf() - startDate.valueOf()) / (1000 * 60 * 60 * 24)
     );
   }
   return 0;
@@ -108,11 +118,11 @@ const quickFilters = [
 const handleSearch = async () => {
   const query = {
     location: location.value,
-    checkIn: value?.value.start
-      ? format(value.value.start.toDate(timeZone), "yyyy-MM-dd")
+    checkIn: value.value[0]
+      ? format(value.value[0], "yyyy-MM-dd")
       : format(new Date(), "yyyy-MM-dd"),
-    checkOut: value?.value.end
-      ? format(value.value.end.toDate(timeZone), "yyyy-MM-dd")
+    checkOut: value.value[1]
+      ? format(value.value[1], "yyyy-MM-dd")
       : format(addDays(new Date(), 1), "yyyy-MM-dd"),
     adults: guests.adults.toString(),
     children: guests.children.toString(),
@@ -153,12 +163,8 @@ watch(location, (newLocation) => {
 watch(
   value,
   (newValue) => {
-    searchStore.checkIn = newValue.start
-      ? format(newValue.start.toDate(timeZone), "yyyy-MM-dd")
-      : "";
-    searchStore.checkOut = newValue.end
-      ? format(newValue.end.toDate(timeZone), "yyyy-MM-dd")
-      : "";
+    searchStore.checkIn = newValue[0] ? format(newValue[0], "yyyy-MM-dd") : "";
+    searchStore.checkOut = newValue[1] ? format(newValue[1], "yyyy-MM-dd") : "";
     searchStore.setSearchParams({
       location: searchStore.location,
       checkIn: searchStore.checkIn,
@@ -185,6 +191,12 @@ watch(
   },
   { deep: true }
 );
+
+const isDateUnavailable = (date: Date) => {
+  return isBefore(date, new Date());
+};
+
+const size = ref<"default" | "large" | "small">("default");
 </script>
 
 <template>
@@ -218,56 +230,18 @@ watch(
       </div>
 
       <div class="md:col-span-3">
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              class="flex items-start justify-between w-full h-full border rounded-md p-1 bg-white cursor-pointer hover:border-gray-300 transition-all"
-            >
-              <!-- Check-in Section -->
-              <div
-                class="flex flex-col justify-between px-3 py-1 relative group text-left h-full"
-              >
-                <div class="text-xs text-gray-500 mb-0.5">Check-in</div>
-                <div
-                  :class="[
-                    'font-medium',
-                    value?.end ? 'text-gray-900' : 'text-gray-400',
-                  ]"
-                >
-                  {{ value?.start ? formattedStart : "Select date" }}
-                </div>
-              </div>
-
-              <!-- Nights Counter -->
-              <div
-                class="flex items-center justify-center h-full text-sm text-gray-500"
-              >
-                {{ calculateNights }} nights
-              </div>
-
-              <!-- Check-out Section -->
-              <div
-                class="flex flex-col justify-between px-3 py-1 relative group text-left h-full"
-              >
-                <div class="text-xs text-gray-500 mb-0.5">Check-out</div>
-                <div
-                  :class="[
-                    'font-medium',
-                    value?.end ? 'text-gray-900' : 'text-gray-400',
-                  ]"
-                >
-                  {{ value?.end ? formattedEnd : "Select date" }}
-                </div>
-              </div>
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent class="w-auto p-0" align="center">
-            <div class="flex">
-              <RangeCalendar v-model="value" class="rounded-md border" />
-            </div>
-          </PopoverContent>
-        </Popover>
+        <div class="flex">
+          <el-date-picker
+            v-model="value"
+            type="daterange"
+            range-separator="To"
+            start-placeholder="Start date"
+            end-placeholder="End date"
+            :size="size"
+            :disabled-date="isDateUnavailable"
+            class="rounded-md border"
+          />
+        </div>
       </div>
 
       <div class="md:col-span-2">
@@ -284,7 +258,7 @@ watch(
                 <div
                   :class="[
                     'font-medium',
-                    value?.end ? 'text-gray-900' : 'text-gray-400',
+                    value?.[1] ? 'text-gray-900' : 'text-gray-400',
                   ]"
                 >
                   {{ guests.adults + guests.children }} Guest{{
@@ -392,3 +366,9 @@ watch(
     </div>
   </div>
 </template>
+
+<style scoped>
+::v-deep(.el-picker-panel .el-date-table td.in-range) {
+  background-color: #649dae !important;
+}
+</style>
