@@ -51,6 +51,13 @@ func ErrResourceNotFound(res string) Error {
 	}
 }
 
+func ErrEmailTaken() Error {
+	return Error{
+		Code: http.StatusBadRequest,
+		Err:  "email already taken",
+	}
+}
+
 func ErrInvalidID() Error {
 	return Error{
 		Code: http.StatusBadRequest,

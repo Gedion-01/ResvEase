@@ -1,6 +1,19 @@
 <script setup lang="ts">
 import { RouterLink } from "vue-router";
-import { Moon, Sun } from "lucide-vue-next";
+import { LogOut, Moon, Sun, User } from "lucide-vue-next";
+import { useAuthStore } from "@/store/authStore";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
+
+const authStore = useAuthStore();
+
+const handleLogout = () => {
+  authStore.logout();
+};
 </script>
 <template>
   <header
@@ -33,6 +46,34 @@ import { Moon, Sun } from "lucide-vue-next";
               />
               <span class="sr-only">Toggle theme</span>
             </button>
+            <Popover v-if="authStore.isAuthenticated">
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  class="ml-4 flex items-center justify-center rounded-full h-9 w-9 p-0"
+                >
+                  <User class="h-5 w-5" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent class="w-48">
+                <div class="flex flex-col space-y-2">
+                  <RouterLink
+                    to="/profile"
+                    class="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-md"
+                  >
+                    <User class="h-4 w-4" />
+                    <span>Profile</span>
+                  </RouterLink>
+                  <button
+                    @click="handleLogout"
+                    class="flex items-center space-x-2 p-2 hover:bg-gray-100 rounded-md"
+                  >
+                    <LogOut class="h-4 w-4" />
+                    <span>Logout</span>
+                  </button>
+                </div>
+              </PopoverContent>
+            </Popover>
           </nav>
         </div>
       </div>
