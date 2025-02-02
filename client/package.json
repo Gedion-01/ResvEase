@@ -11,7 +11,9 @@
     "type-check": "vue-tsc --build"
   },
   "dependencies": {
+    "@hookform/resolvers": "^3.10.0",
     "@tanstack/vue-query": "^5.62.9",
+    "@vee-validate/zod": "^4.15.0",
     "@vuepic/vue-datepicker": "^11.0.1",
     "@vueuse/core": "^12.4.0",
     "axios": "^1.7.9",
@@ -27,9 +29,11 @@
     "react-day-picker": "^8.10.1",
     "tailwind-merge": "^2.6.0",
     "tailwindcss-animate": "^1.0.7",
+    "vee-validate": "^4.15.0",
     "vue": "^3.5.13",
     "vue-day-picker": "^1.0.9",
-    "vue-router": "^4.5.0"
+    "vue-router": "^4.5.0",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@tsconfig/node22": "^22.0.0",
