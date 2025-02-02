@@ -50,6 +50,10 @@ func (h *UserHandler) HandlePostUser(c *fiber.Ctx) error {
 	if errors := params.Validate(); len(errors) > 0 {
 		return c.JSON(errors)
 	}
+	_, err := h.userStore.GetUserByEmail(c.Context(), params.Email)
+	if err == nil {
+		return ErrEmailTaken()
+	}
 	user, err := types.NewUserFromParams(params)
 	if err != nil {
 		return err

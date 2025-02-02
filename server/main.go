@@ -44,13 +44,14 @@ func main() {
 		roomHandler    = api.NewRoomHandler(store)
 		bookingHandler = api.NewBookingHandler(store)
 		app            = fiber.New(config)
-		auth           = app.Group("/api")
+		auth           = app.Group("/api/v1")
 		apiv1          = app.Group("/api/v1")
 		admin          = apiv1.Group("/admin")
 	)
 	app.Use(cors.New())
 	// auth
 	auth.Post("/auth", authHandler.HandleAuthenticate)
+	auth.Post("/signup", userHandler.HandlePostUser)
 
 	// hotel handlers
 	apiv1.Get("/hotel", hotelHandler.HandleGetHotels)
@@ -59,10 +60,14 @@ func main() {
 
 	// Versioned API routes
 	// user handlers
-	apiv1.Use(api.JWTAuthentication(userStore))
+	apiv1.Use(func(c *fiber.Ctx) error {
+		if c.Path() == "/api/v1/auth" || c.Path() == "/api/v1/signup" {
+			return c.Next()
+		}
+		return api.JWTAuthentication(userStore)(c)
+	})
 	apiv1.Get("/user", userHandler.HandleGetUsers)
 	apiv1.Get("/user/:id", userHandler.HandleGetUser)
-	apiv1.Post("/user", userHandler.HandlePostUser)
 	apiv1.Delete("/user/:id", userHandler.HandleDeleteUser)
 	apiv1.Put("/user/:id", userHandler.HandlePutUser)
 
