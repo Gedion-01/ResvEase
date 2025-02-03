@@ -34,6 +34,7 @@ const router = createRouter({
       path: "/auth",
       name: "Auth",
       component: AuthView,
+      meta: { requiresGuest: true },
     },
   ],
 });
@@ -44,6 +45,8 @@ router.beforeEach((to, from, next) => {
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     authStore.setRedirectUrl(to.fullPath);
     next("/auth?tab=login");
+  } else if (to.meta.requiresGuest && authStore.isAuthenticated) {
+    next("/");
   } else {
     next();
   }
