@@ -1,4 +1,3 @@
-<!-- filepath: /home/gedion/Documents/Projects/Hotel-Reservation-App/client/src/components/LoginForm.vue -->
 <script setup lang="ts">
 import { useAuthStore } from "@/store/authStore";
 import { ref } from "vue";
@@ -14,9 +13,14 @@ import {
   FormControl,
   FormMessage,
 } from "@/components/ui/form";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+
+import type { AxiosError } from "axios";
+import { LoaderCircle, TriangleAlert } from "lucide-vue-next";
 
 const authStore = useAuthStore();
 const isLoading = ref(false);
+const errorMessage = ref("");
 
 const loginSchema = toTypedSchema(
   z.object({
@@ -38,6 +42,7 @@ const { handleSubmit, ...loginForm } = useForm({
 const onLoginSubmit = handleSubmit(async (values) => {
   console.log("Login data:", values);
   isLoading.value = true;
+  errorMessage.value = "";
   const timeout = setTimeout(() => {
     isLoading.value = false;
     console.error("Login request timed out");
@@ -45,11 +50,16 @@ const onLoginSubmit = handleSubmit(async (values) => {
   try {
     await authStore.login(values);
     clearTimeout(timeout);
+  } catch (error: unknown) {
+    const axiosError = error as AxiosError;
+    if (axiosError.response && axiosError.response.status === 401) {
+      errorMessage.value = "Invalid email or password";
+    } else {
+      errorMessage.value = "An error occurred while logging in";
+    }
+  } finally {
     isLoading.value = false;
-  } catch (error) {
     clearTimeout(timeout);
-    isLoading.value = false;
-    console.error("Login failed:", error);
   }
 });
 </script>
@@ -82,8 +92,15 @@ const onLoginSubmit = handleSubmit(async (values) => {
         <FormMessage />
       </FormItem>
     </FormField>
+    <div v-if="errorMessage" class="mt-4">
+      <Alert variant="destructive">
+        <TriangleAlert class="w-4 h-4 mr-2" />
+        <AlertTitle>Error</AlertTitle>
+        <AlertDescription>{{ errorMessage }}</AlertDescription>
+      </Alert>
+    </div>
     <Button type="submit" class="w-full" :disabled="isLoading">
-      <span v-if="isLoading">Loading...</span>
+      <LoaderCircle class="h-4 w-4 mr-2 animate-spin" v-if="isLoading" />
       <span v-else>Login</span>
     </Button>
   </form>

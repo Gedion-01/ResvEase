@@ -20,6 +20,19 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
+apiClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    const authStore = useAuthStore();
+
+    if (error.response.status === 401) {
+      // Token is invalid or expired
+      authStore.logout();
+    }
+    return Promise.reject(error);
+  }
+);
+
 export const getHotel = async (hotelId: string) => {
   const response = await apiClient.get<Hotel>(`/hotel/${hotelId}`);
   return response.data;

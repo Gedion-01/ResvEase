@@ -13,10 +13,12 @@
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
     "@tanstack/vue-query": "^5.62.9",
+    "@types/canvas-confetti": "^1.9.0",
     "@vee-validate/zod": "^4.15.0",
     "@vuepic/vue-datepicker": "^11.0.1",
     "@vueuse/core": "^12.4.0",
     "axios": "^1.7.9",
+    "canvas-confetti": "^1.9.3",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "date-fns": "^3.6.0",
