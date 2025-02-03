@@ -53,7 +53,7 @@ func ErrResourceNotFound(res string) Error {
 
 func ErrEmailTaken() Error {
 	return Error{
-		Code: http.StatusBadRequest,
+		Code: http.StatusConflict,
 		Err:  "email already taken",
 	}
 }

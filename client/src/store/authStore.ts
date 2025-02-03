@@ -32,12 +32,30 @@ export const useAuthStore = defineStore("auth", () => {
     }
   };
 
-  const logout = () => {
+  const signup = async (credential: {
+    firstName: string;
+    lastName: string;
+    email: string;
+    password: string;
+    confirmPassword: string;
+  }) => {
+    try {
+      const response = await apiClient.post("/signup", credential);
+      // router.push(redirectUrl.value || "/auth?tab=login");
+    } catch (error) {
+      console.error("An error occurred while signing up:", error);
+      throw error;
+    }
+  };
+
+  const logout = (redirect = true) => {
     token.value = null;
     user.value = {};
     localStorage.removeItem("authToken");
     localStorage.removeItem("user");
-    router.push("/auth?tab=login");
+    if (redirect) {
+      router.push("/auth?tab=login");
+    }
   };
 
   const isTokenExpired = () => {
@@ -45,10 +63,16 @@ export const useAuthStore = defineStore("auth", () => {
 
     try {
       const payload = JSON.parse(atob(token.value.split(".")[1])); // Decode JWT payload
-      const expiry = payload.exp; // Expiration time in seconds
+      const expiry = payload.expires; // Expiration time in seconds
       return Date.now() >= expiry * 1000; // Compare with current time
     } catch (error) {
       return true;
+    }
+  };
+
+  const initializeTokenCheck = () => {
+    if (isTokenExpired()) {
+      logout(false);
     }
   };
 
@@ -58,7 +82,9 @@ export const useAuthStore = defineStore("auth", () => {
     isAuthenticated,
     setRedirectUrl,
     login,
+    signup,
     logout,
     isTokenExpired,
+    initializeTokenCheck,
   };
 });

@@ -33,10 +33,11 @@ func (p UpdateUserParams) ToBSON() bson.M {
 }
 
 type CreateUserParams struct {
-	FirstName string `json:"firstName"`
-	LastName  string `json:"lastName"`
-	Email     string `json:"email"`
-	Password  string `json:"password"`
+	FirstName       string `json:"firstName"`
+	LastName        string `json:"lastName"`
+	Email           string `json:"email"`
+	Password        string `json:"password"`
+	ConfirmPassword string `json:"confirmPassword"`
 }
 
 func (params CreateUserParams) Validate() map[string]string {
@@ -52,6 +53,9 @@ func (params CreateUserParams) Validate() map[string]string {
 	}
 	if !isValidEmail(params.Email) {
 		errors["email"] = fmt.Sprintf("email %s is invalid", params.Email)
+	}
+	if params.Password != params.ConfirmPassword {
+		errors["confirmPassword"] = "passwords do not match"
 	}
 
 	return errors
