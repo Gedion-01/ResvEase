@@ -1,13 +1,9 @@
-<!-- filepath: /home/gedion/Documents/Projects/Hotel-Reservation-App/client/src/components/SearchSection.vue -->
 <script setup lang="ts">
-import { useRoute, useRouter, type RouteParams } from "vue-router";
-import type { Dayjs } from "dayjs";
-import { Calendar as CalendarIcon } from "lucide-vue-next";
-import { type Ref, ref, computed, reactive, watch, onMounted } from "vue";
+import { useRoute, useRouter } from "vue-router";
+import { ref, computed, reactive, watch } from "vue";
 import { useSearchStore } from "@/store/searchStore";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { List, Map } from "lucide-vue-next";
 import {
   Popover,
@@ -15,11 +11,11 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Search } from "lucide-vue-next";
-import { addDays, format, isBefore } from "date-fns";
+import { addDays, format, isBefore, startOfDay } from "date-fns";
 import { getLocalTimeZone } from "@internationalized/date";
 import { useQueryClient } from "@tanstack/vue-query";
 import { useFilterStore } from "@/store/filterStore";
-import { ElDatePicker, parseDate } from "element-plus"; // Import the ElDatePicker component
+import { ElDatePicker } from "element-plus";
 
 const searchStore = useSearchStore();
 searchStore.loadSearchParams();
@@ -47,42 +43,63 @@ const guests = reactive({
 
 const viewMode = ref<"list" | "map">("list");
 
+console.log("searchStore", searchStore.checkIn, searchStore.checkOut);
+
 const timeZone = getLocalTimeZone();
-const start = searchStore.checkIn
-  ? parseDate(searchStore.checkIn, "yyyy-MM-dd", new Date().toISOString())
-  : parseDate(
-      new Date().toISOString().split("T")[0],
-      "yyyy-MM-dd",
-      new Date().toISOString()
-    );
-const end = searchStore.checkOut
-  ? parseDate(searchStore.checkOut, "yyyy-MM-dd", new Date().toISOString())
-  : parseDate(
-      addDays(new Date(), 1).toISOString().split("T")[0],
-      "yyyy-MM-dd",
-      new Date().toISOString()
-    );
 
 const value = ref<[Date, Date]>([
-  start ? start.toDate() : new Date(),
-  end ? end.toDate() : addDays(new Date(), 1),
+  new Date(searchStore.checkIn),
+  new Date(searchStore.checkOut),
 ]);
-
+const shortcuts = [
+  {
+    text: "Next week",
+    value: () => {
+      const start = new Date();
+      const end = new Date();
+      end.setTime(end.getTime() + 7 * 24 * 3600 * 1000);
+      return [start, end];
+    },
+  },
+  {
+    text: "Next month",
+    value: () => {
+      const start = new Date();
+      const end = new Date();
+      end.setTime(end.getTime() + 30 * 24 * 3600 * 1000);
+      return [start, end];
+    },
+  },
+  {
+    text: "Next 3 months",
+    value: () => {
+      const start = new Date();
+      const end = new Date();
+      end.setTime(end.getTime() + 90 * 24 * 3600 * 1000);
+      return [start, end];
+    },
+  },
+];
+const handleDateChange = (val: [Date, Date]) => {
+  value.value = val;
+};
+console.log("value", value.value);
 const formattedStart = computed(() => {
-  if (value.value[0]) {
+  if (value.value && value.value[0]) {
     return format(value.value[0], "iii, MMM dd");
   }
   return "";
 });
+
 const formattedEnd = computed(() => {
-  if (value.value[1]) {
+  if (value.value && value.value[1]) {
     return format(value.value[1], "iii, MMM dd");
   }
   return "";
 });
 
 const calculateNights = computed(() => {
-  if (value.value[0] && value.value[1]) {
+  if (value.value && value.value[0] && value.value[1]) {
     const startDate = value.value[0];
     const endDate = value.value[1];
     return Math.ceil(
@@ -118,12 +135,14 @@ const quickFilters = [
 const handleSearch = async () => {
   const query = {
     location: location.value,
-    checkIn: value.value[0]
-      ? format(value.value[0], "yyyy-MM-dd")
-      : format(new Date(), "yyyy-MM-dd"),
-    checkOut: value.value[1]
-      ? format(value.value[1], "yyyy-MM-dd")
-      : format(addDays(new Date(), 1), "yyyy-MM-dd"),
+    checkIn:
+      value?.value && value.value[0]
+        ? format(value.value[0], "yyyy-MM-dd")
+        : format(new Date(), "yyyy-MM-dd"),
+    checkOut:
+      value?.value && value.value[1]
+        ? format(value.value[1], "yyyy-MM-dd")
+        : format(addDays(new Date(), 1), "yyyy-MM-dd"),
     adults: guests.adults.toString(),
     children: guests.children.toString(),
     roomCapacity: (guests.adults + guests.children).toString(),
@@ -163,8 +182,10 @@ watch(location, (newLocation) => {
 watch(
   value,
   (newValue) => {
-    searchStore.checkIn = newValue[0] ? format(newValue[0], "yyyy-MM-dd") : "";
-    searchStore.checkOut = newValue[1] ? format(newValue[1], "yyyy-MM-dd") : "";
+    searchStore.checkIn =
+      newValue && newValue[0] ? format(newValue[0], "yyyy-MM-dd") : "";
+    searchStore.checkOut =
+      newValue && newValue[1] ? format(newValue[1], "yyyy-MM-dd") : "";
     searchStore.setSearchParams({
       location: searchStore.location,
       checkIn: searchStore.checkIn,
@@ -193,7 +214,7 @@ watch(
 );
 
 const isDateUnavailable = (date: Date) => {
-  return isBefore(date, new Date());
+  return isBefore(date, startOfDay(new Date()));
 };
 
 const size = ref<"default" | "large" | "small">("default");
@@ -239,6 +260,7 @@ const size = ref<"default" | "large" | "small">("default");
             end-placeholder="End date"
             :disabled-date="isDateUnavailable"
             class="rounded-md"
+            @change="handleDateChange"
           />
         </div>
       </div>

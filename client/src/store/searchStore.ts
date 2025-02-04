@@ -1,4 +1,5 @@
 import { defineStore } from "pinia";
+import { addDays, format, isBefore, parseISO, startOfDay } from "date-fns";
 
 export const useSearchStore = defineStore("search", {
   state: () => ({
@@ -27,9 +28,26 @@ export const useSearchStore = defineStore("search", {
       const params = localStorage.getItem("searchParams");
       if (params) {
         const parsedParams = JSON.parse(params);
+        // Parse stored checkIn/checkOut dates using parseISO for reliable comparison
+        const storedCheckIn = parsedParams.checkIn
+          ? parseISO(parsedParams.checkIn)
+          : null;
+        console.log("sdddd", params, this.checkIn, this.checkOut);
+        const storedCheckOut = parsedParams.checkOut
+          ? parseISO(parsedParams.checkOut)
+          : null;
+        const today = startOfDay(new Date());
+
+        // If the stored check-in is before today's start, clear dates.
+        if (storedCheckIn && isBefore(storedCheckIn, today)) {
+          this.checkIn = format(today, "yyyy-MM-dd");
+          this.checkOut = format(addDays(today, 1), "yyyy-MM-dd");
+        } else {
+          this.checkIn = parsedParams.checkIn;
+          this.checkOut = parsedParams.checkOut;
+        }
+
         this.location = parsedParams.location;
-        this.checkIn = parsedParams.checkIn;
-        this.checkOut = parsedParams.checkOut;
         this.adults = parsedParams.adults;
         this.children = parsedParams.children;
       }
