@@ -13,6 +13,7 @@ import {
   CarouselNext,
   CarouselPrevious,
 } from "@/components/ui/carousel";
+import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import {
   Bed,
   Users,
@@ -42,6 +43,7 @@ import {
 import { useRooms } from "@/services/queries";
 import { useRoute, useRouter } from "vue-router";
 import type { Hotel, Room } from "@/types/hotel";
+import RoomSelectionSkeleton from "./animations/RoomSelectionSkeleton.vue";
 
 const props = defineProps<{
   hotel: Hotel;
@@ -305,8 +307,8 @@ const reserveRoom = (room: Room) => {
           Clear all filters
         </Button>
       </div>
-      <ScrollArea class="w-full whitespace-nowrap rounded-md">
-        <div class="flex w-max space-x-2 py-4">
+      <ScrollArea class="w-full whitespace-nowrap rounded-md border">
+        <div class="flex w-max space-x-2 p-4">
           <Badge
             v-for="filter in filters"
             :key="filter.id"
@@ -321,40 +323,27 @@ const reserveRoom = (room: Room) => {
         <ScrollBar orientation="horizontal" />
       </ScrollArea>
     </div>
-    <div v-if="isFetching">Loading...</div>
+    <div v-if="isLoading || isFetching">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        <RoomSelectionSkeleton v-for="index in 9" :key="index" />
+      </div>
+    </div>
     <div
       v-else-if="!data?.data || data.data.length === 0"
       class="text-center text-gray-500"
     >
       No rooms available.
     </div>
-    <Card
-      v-else
-      v-for="room in data?.data"
-      :key="room.id"
-      :class="[
-        'cursor-pointer transition-colors',
-        selectedRoom === room.id ? 'border-primary' : '',
-      ]"
-    >
-      <CardHeader>
-        <div class="flex justify-between items-start">
-          <div>
-            <CardTitle class="whitespace-wrap">{{ room.name }}</CardTitle>
-            <p class="text-sm text-muted-foreground mt-1">
-              {{ room.description }}
-            </p>
-          </div>
-          <Badge
-            :variant="room.availableCount < 3 ? 'destructive' : 'secondary'"
-            class="whitespace-nowrap"
-          >
-            {{ room.availableCount }} rooms left
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent>
-        <div class="grid md:grid-cols-2 gap-6">
+    <div v-else className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <Card
+        v-for="room in data?.data"
+        :key="room.id"
+        :class="[
+          'cursor-pointer transition-colors',
+          selectedRoom === room.id ? 'border-primary' : '',
+        ]"
+      >
+        <CardHeader class="p-0">
           <div class="relative">
             <Dialog>
               <Carousel class="relative cursor-pointer">
@@ -367,7 +356,7 @@ const reserveRoom = (room: Room) => {
                     <DialogTrigger asChild>
                       <img
                         :src="image"
-                        class="object-cover w-full h-full rounded-lg"
+                        class="object-cover w-full h-full rounded-t-lg"
                         :alt="`${room.name} view ${index + 1}`"
                       />
                     </DialogTrigger>
@@ -420,39 +409,44 @@ const reserveRoom = (room: Room) => {
               </DialogContent>
             </Dialog>
           </div>
-          <div class="space-y-4">
-            <div class="flex items-center gap-2">
+        </CardHeader>
+        <CardContent class="p-4">
+          <CardTitle class="mb-2">{{ room.name }}</CardTitle>
+          <p class="text-sm text-muted-foreground mb-4">
+            {{ room.description }}
+          </p>
+          <div class="flex flex-wrap justify-between gap-3 mb-4">
+            <span class="flex gap-2">
               <Bed class="h-5 w-5" />
+              <span>{{ room.bedType }} Bed</span>
+            </span>
+            <span class="flex gap-2">
+              <Users class="h-5 w-5" />
               <span>Sleeps {{ room.capacity }}</span>
-              <Users class="h-5 w-5 ml-4" />
-              <span>Max {{ room.capacity }} guests</span>
-            </div>
-            <div class="flex flex-wrap gap-2">
-              <Badge
-                v-for="amenity in room.amenities"
-                :key="amenity"
-                variant="outline"
-                class="flex items-center gap-1"
-              >
-                <component
-                  :is="getAmenityIcon(amenity)"
-                  class="h-4 w-4 text-blue-500"
-                />
-                {{ amenity }}
-              </Badge>
-            </div>
-            <div class="flex justify-between items-center mt-4">
-              <div>
-                <span class="text-2xl font-bold">{{ room.price }}</span>
-                <span class="text-muted-foreground">/night</span>
-              </div>
-              <Button @click="reserveRoom(room)" variant="default">
-                Reserve</Button
-              >
-            </div>
+            </span>
           </div>
-        </div>
-      </CardContent>
-    </Card>
+          <div class="flex flex-wrap gap-2 mb-4">
+            <Badge
+              v-for="amenity in room.amenities"
+              :key="amenity"
+              variant="outline"
+              class="flex items-center gap-1"
+            >
+              <component :is="getAmenityIcon(amenity)" class="h-4 w-4" />
+              {{ amenity }}
+            </Badge>
+          </div>
+          <div class="flex justify-between items-center">
+            <div>
+              <span class="text-2xl font-bold">${{ room.price }}</span>
+              <span class="text-muted-foreground">/night</span>
+            </div>
+            <Button @click="reserveRoom(room)" variant="default">
+              Reserve</Button
+            >
+          </div>
+        </CardContent>
+      </Card>
+    </div>
   </div>
 </template>
