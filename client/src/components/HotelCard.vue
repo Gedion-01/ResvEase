@@ -77,18 +77,6 @@ const testArray = [1, 2, 3, 4, 5];
           >From ${{ Math.min(...hotel.prices) }}</span
         >
       </div>
-      <!--
-      <div class="flex items-center gap-2 mb-4">
-        <Badge variant="secondary" class="flex items-center">
-          <Bed class="h-3 w-3 mr-1" />
-          {{ hotel.bedrooms }}
-          {{ hotel.bedrooms === 1 ? "Bedroom" : "Bedrooms" }}
-        </Badge>
-        <Badge variant="outline" class="flex items-center">
-          {{ hotel.bedTypes.join(", ") }}
-        </Badge>
-      </div>
-      -->
       <RouterLink :to="`/hotel/${hotel.id}/rooms?${queryString}`">
         <Button class="w-full">View Details</Button>
       </RouterLink>
