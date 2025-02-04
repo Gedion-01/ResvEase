@@ -1,10 +1,12 @@
 <script setup lang="ts">
 import { useHotels } from "@/services/queries";
+
 import HotelCard from "./HotelCard.vue";
 import { useRoute, useRouter } from "vue-router";
 import { useSearchStore } from "@/store/searchStore";
 import { useFilterStore } from "@/store/filterStore";
 import { watch, ref, reactive, onMounted } from "vue";
+import HotelCardSkeleton from "./animations/HotelCardSkeleton.vue";
 
 const route = useRoute();
 const router = useRouter();
@@ -84,7 +86,12 @@ watch(
 </script>
 <template>
   <div>
-    <div v-if="isLoading || isFetching">Loading...</div>
+    <div
+      v-if="isLoading || isFetching"
+      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+    >
+      <HotelCardSkeleton v-for="index in 12" :key="index" />
+    </div>
     <div v-else-if="isError">Error loading hotels</div>
     <div v-else>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
