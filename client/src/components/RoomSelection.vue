@@ -2,6 +2,7 @@
 import { ref, defineProps, reactive, watch } from "vue";
 import { useFilterStore } from "@/store/filterStore";
 import { useRoomBookingStore } from "@/store/bookingStore";
+import { useAuthStore } from "@/store/authStore";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -44,6 +45,7 @@ import { useRooms } from "@/services/queries";
 import { useRoute, useRouter } from "vue-router";
 import type { Hotel, Room } from "@/types/hotel";
 import RoomSelectionSkeleton from "./animations/RoomSelectionSkeleton.vue";
+import LoginPromptDialog from "./popups/LoginPromptDialog.vue";
 
 const props = defineProps<{
   hotel: Hotel;
@@ -51,6 +53,7 @@ const props = defineProps<{
 
 const filterStore = useFilterStore();
 const bookingStore = useRoomBookingStore();
+const authStore = useAuthStore();
 
 const route = useRoute();
 const router = useRouter();
@@ -76,6 +79,8 @@ const { data, isLoading, isFetching, refetch } = useRooms(
   props.hotel.id,
   queryParams
 );
+
+const loginPromptDialogRef = ref();
 
 const selectedRoom = ref<string>("");
 const currentImageIndex = ref<{ [key: string]: number }>({});
@@ -288,7 +293,13 @@ watch(data, calculateFilterCounts, { immediate: true });
 const reserveRoom = (room: Room) => {
   bookingStore.setRoomBookingDetails(room);
   bookingStore.setHotelBookingDetails(props.hotel);
-  router.push("/booking");
+  if (!authStore.isAuthenticated) {
+    loginPromptDialogRef.value.openDialog();
+    return;
+  } else {
+    // openDialog();
+  }
+  // router.push("/booking");
 };
 </script>
 
@@ -449,4 +460,5 @@ const reserveRoom = (room: Room) => {
       </Card>
     </div>
   </div>
+  <LoginPromptDialog ref="loginPromptDialogRef" />
 </template>
