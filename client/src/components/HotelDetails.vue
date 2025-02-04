@@ -98,20 +98,16 @@ const testArray = [1, 2, 3, 4, 5];
 </script>
 <template>
   <div>
-    <h1 class="text-3xl font-bold mb-4">{{ hotel.name }}</h1>
-    <div class="flex items-center mb-4">
-      <MapPin class="h-5 w-5 mr-2" />
-      <span>{{ hotel.location }}</span>
-    </div>
-    <Carousel
-      class="relative w-full max-w-3xl mb-4"
-      @init-api="handleCarouselInit"
-    >
+    <Carousel class="relative w-full mb-4" @init-api="handleCarouselInit">
       <CarouselContent>
-        <CarouselItem v-for="(img, index) in hotel.images" :key="img">
+        <CarouselItem
+          class="relative aspect-[21/9]"
+          v-for="(img, index) in hotel.images"
+          :key="img"
+        >
           <img
             :src="img"
-            class="rounded-lg h-[400px] w-[800px] object-cover"
+            class="rounded-lg w-full h-full object-cover"
             :alt="hotel.name"
           />
         </CarouselItem>
@@ -141,6 +137,11 @@ const testArray = [1, 2, 3, 4, 5];
       >
         {{ index + 1 }}
       </Button>
+    </div>
+    <h1 class="text-3xl font-bold mb-4">{{ hotel.name }}</h1>
+    <div class="flex items-center mb-4">
+      <MapPin class="h-5 w-5 mr-2" />
+      <span>{{ hotel.location }}</span>
     </div>
     <div class="flex items-center mb-4">
       <Star

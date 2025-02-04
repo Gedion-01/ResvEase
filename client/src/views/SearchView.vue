@@ -27,7 +27,7 @@ const viewMode = ref<"list" | "map">("list");
 
 <template>
   <section class="min-h-screen bg-background flex flex-col">
-    <div :class="['py-8 flex-grow']">
+    <div :class="['py-1 flex-grow']">
       <div
         ref="searchSection"
         :class="[
@@ -39,7 +39,7 @@ const viewMode = ref<"list" | "map">("list");
       </div>
       <div class="flex flex-col md:flex-row gap-8 mt-4 container">
         <aside
-          class="w-full md:w-1/4 md:sticky md:top-[260px] self-start group"
+          class="w-full md:w-1/4 md:sticky md:top-[232px] self-start group"
         >
           <div class="space-y-6 group-sticky:bg-red-500">
             <SearchFilters />
