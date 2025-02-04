@@ -52,12 +52,12 @@ if (error) {
     >
       <SearchSection :is-sticky="isSticky" />
     </div>
-    <div
-      class="container mx-auto px-4 py-8 grid grid-cols-1 md:grid-cols-3 gap-8"
-    >
-      <div class="md:col-span-2" v-if="data">
+    <div class="container mx-auto px-4 pb-8 max-w-7xl">
+      <div class="" v-if="data">
         <HotelDetails :hotel="data" />
-        <div class="mt-8"><RoomSelection :hotel="data" /></div>
+        <div class="mt-8">
+          <RoomSelection :hotel="data" />
+        </div>
       </div>
       <div class="md:sticky md:top-24 h-fit"></div>
     </div>
