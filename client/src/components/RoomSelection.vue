@@ -46,12 +46,14 @@ import { useRoute, useRouter } from "vue-router";
 import type { Hotel, Room } from "@/types/hotel";
 import RoomSelectionSkeleton from "./animations/RoomSelectionSkeleton.vue";
 import LoginPromptDialog from "./popups/LoginPromptDialog.vue";
+import { useSearchStore } from "@/store/searchStore";
 
 const props = defineProps<{
   hotel: Hotel;
 }>();
 
 const filterStore = useFilterStore();
+const searchStore = useSearchStore();
 const bookingStore = useRoomBookingStore();
 const authStore = useAuthStore();
 
@@ -293,13 +295,13 @@ watch(data, calculateFilterCounts, { immediate: true });
 const reserveRoom = (room: Room) => {
   bookingStore.setRoomBookingDetails(room);
   bookingStore.setHotelBookingDetails(props.hotel);
+  console.log(searchStore.adults, searchStore.children);
+  bookingStore.setGuests(searchStore.adults, searchStore.children);
   if (!authStore.isAuthenticated) {
     loginPromptDialogRef.value.openDialog();
     return;
-  } else {
-    // openDialog();
   }
-  // router.push("/booking");
+  router.push("/booking");
 };
 </script>
 
