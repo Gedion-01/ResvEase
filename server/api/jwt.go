@@ -5,6 +5,7 @@ import (
 	"hotel-reservation/db"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gofiber/fiber/v2"
@@ -15,7 +16,13 @@ func JWTAuthentication(userStore db.UserStore) fiber.Handler {
 	return func(c *fiber.Ctx) error {
 		fmt.Println("--JWT authing")
 
-		token := c.Get("X-Api-Token")
+		authHeader := c.Get("Authorization")
+		if authHeader == "" {
+			return ErrUnAuthorized()
+		}
+
+		// Extract the token from the "Bearer <token>" format
+		token := strings.TrimPrefix(authHeader, "Bearer ")
 
 		claims, err := validateToken(token)
 		if err != nil {
