@@ -13,7 +13,8 @@ import (
 
 type RoomStore interface {
 	InsertRoom(context.Context, *types.Room) (*types.Room, error)
-	// GetRooms(context.Context, bson.M) ([]map[string]interface{}, error)
+	GetRoomByID(context.Context, primitive.ObjectID) (*types.Room, error)
+	GetRoomsSearch(context.Context, bson.M) ([]*types.Room, error)
 	GetRooms(ctx context.Context, hotelFilters, roomFilters bson.M, fromDate, tillDate *time.Time, page, limit int) ([]*types.GroupedRoom, error)
 }
 
@@ -145,6 +146,30 @@ func (s *MongoRoomStore) GetRooms(
 	}
 
 	return results, nil
+}
+
+func (s *MongoRoomStore) GetRoomByID(ctx context.Context, id primitive.ObjectID) (*types.Room, error) {
+	resp := s.coll.FindOne(ctx, bson.M{"_id": id})
+	if resp.Err() != nil {
+		return nil, resp.Err()
+	}
+	var room types.Room
+	if err := resp.Decode(&room); err != nil {
+		return nil, err
+	}
+	return &room, nil
+}
+
+func (s *MongoRoomStore) GetRoomsSearch(ctx context.Context, filter bson.M) ([]*types.Room, error) {
+	resp, err := s.coll.Find(ctx, filter)
+	if err != nil {
+		return nil, err
+	}
+	var rooms []*types.Room
+	if err := resp.All(ctx, &rooms); err != nil {
+		return nil, err
+	}
+	return rooms, nil
 }
 
 func (s *MongoRoomStore) InsertRoom(ctx context.Context, room *types.Room) (*types.Room, error) {
