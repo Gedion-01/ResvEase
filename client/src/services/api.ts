@@ -6,13 +6,15 @@ import {
 } from "@/types/hotel";
 import axios from "axios";
 
-const BASE_URL = "http://localhost:5000/api/v1";
+export const BASE_URL = "http://localhost:5000/api/v1";
 
 const apiClient = axios.create({ baseURL: BASE_URL });
 
 apiClient.interceptors.request.use((config) => {
   const authStore = useAuthStore();
   const token = authStore.token;
+
+  console.log("token", token);
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -70,4 +72,23 @@ export const getRooms = async (
 };
 // `/hotel/${hotelId}/rooms?checkIn=2025-01-01&checkOut=2025-01-05&page=1&limit=10&hotelRating=4.8&RoomCapacity=2`;
 
+interface BookingData {
+  hotelID: string;
+  roomName: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+  specialRequests: string;
+  fromDate: string;
+  tillDate: string;
+  numPersons: number;
+}
+export const bookRoom = async (data: BookingData) => {
+  try {
+    const response = await apiClient.post("/room/book", data);
+    return response;
+  } catch (err) {
+    console.log(err);
+  }
+};
 export default apiClient;

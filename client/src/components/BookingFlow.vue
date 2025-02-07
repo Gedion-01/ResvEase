@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { type Ref, ref, reactive, computed, watch } from "vue";
+import { type Ref, ref, reactive, computed, watch, onMounted } from "vue";
 import { useRouter } from "vue-router";
-import { format, addDays } from "date-fns";
+import { format, addDays, isBefore, startOfDay } from "date-fns";
 import { useRoomBookingStore } from "@/store/bookingStore";
 import type { DateRange } from "radix-vue";
 import { RangeCalendar } from "@/components/ui/range-calendar";
@@ -20,10 +20,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-
-import { Checkbox } from "@/components/ui/checkbox";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -58,6 +54,8 @@ import {
   Mountain,
   Waves,
   ShowerHead,
+  Users,
+  User,
 } from "lucide-vue-next";
 
 interface Room {
@@ -76,6 +74,8 @@ interface BookingFlowProps {
 
 import { CheckCircle2 } from "lucide-vue-next";
 import { useSearchStore } from "@/store/searchStore";
+import axios from "axios";
+import { BASE_URL, bookRoom } from "@/services/api";
 
 interface BookingFlowProps {
   room: Room;
@@ -92,6 +92,11 @@ const loading = ref(false);
 const bookingStore = useRoomBookingStore();
 const searchStore = useSearchStore();
 
+searchStore.loadSearchParams();
+bookingStore.loadBookingData();
+
+console.log(bookingStore.hotel);
+
 const timeZone = getLocalTimeZone();
 const start = searchStore.checkIn
   ? parseDate(searchStore.checkIn)
@@ -100,10 +105,10 @@ const end = searchStore.checkOut
   ? parseDate(searchStore.checkOut)
   : parseDate(addDays(new Date(), 1).toISOString().split("T")[0]);
 
-const value = ref({
-  start,
-  end,
-}) as Ref<DateRange>;
+const value = ref<[Date, Date]>([
+  new Date(searchStore.checkIn),
+  new Date(searchStore.checkOut),
+]);
 
 const bookingData = reactive({
   firstName: "",
@@ -112,17 +117,12 @@ const bookingData = reactive({
   phone: "",
   specialRequests: "",
   addons: [] as string[],
-  paymentMethod: "credit-card",
-  cardNumber: "",
-  expiryDate: "",
-  cvv: "",
-  saveCard: false,
 });
 
 const numberOfNights = computed(() =>
   Math.ceil(
-    ((value.value.end ? value.value.end.toDate(timeZone).getTime() : 0) -
-      (value.value.start ? value.value.start.toDate(timeZone).getTime() : 0)) /
+    ((value.value[1] ? value.value[1].getTime() : 0) -
+      (value.value[0] ? value.value[0].getTime() : 0)) /
       (1000 * 60 * 60 * 24)
   )
 );
@@ -135,30 +135,6 @@ const addonsPrice = computed(() => bookingData.addons.length * 25);
 const totalPrice = computed(
   () => basePrice.value + taxes.value + addonsPrice.value
 );
-
-const addons = [
-  {
-    id: "breakfast",
-    title: "Breakfast Included",
-    description: "Start your day with our delicious breakfast buffet",
-    price: 25,
-    icon: Coffee,
-  },
-  {
-    id: "parking",
-    title: "Parking Space",
-    description: "Secure parking space for your vehicle",
-    price: 25,
-    icon: Car,
-  },
-  {
-    id: "wifi",
-    title: "Premium Wi-Fi",
-    description: "High-speed internet access",
-    price: 25,
-    icon: Wifi,
-  },
-];
 
 const handleAddonToggle = (addonId: string) => {
   const index = bookingData.addons.indexOf(addonId);
@@ -187,11 +163,7 @@ const validateStep = () => {
     case 2:
       return true; // Add-ons are optional
     case 3:
-      return !!(
-        bookingData.cardNumber &&
-        bookingData.expiryDate &&
-        bookingData.cvv
-      );
+      return true;
     default:
       return false;
   }
@@ -200,10 +172,23 @@ const validateStep = () => {
 const handleSubmit = async () => {
   loading.value = true;
   try {
-    // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-    // Show success and redirect
-    router.push("/booking-confirmation");
+    const data = {
+      hotelID: bookingStore.hotel.id,
+      roomName: bookingStore.room.name,
+      fromDate: format(value.value[0], "yyyy-MM-dd"),
+      tillDate: format(value.value[1], "yyyy-MM-dd"),
+      numPersons: bookingStore.adults + bookingStore.children,
+      firstName: bookingData.firstName,
+      lastName: bookingData.lastName,
+      email: bookingData.email,
+      phone: bookingData.phone,
+      specialRequests: bookingData.specialRequests,
+    };
+
+    const response = await bookRoom(data);
+    console.log(response?.data);
+    // Redirect to Stripe Checkout
+    window.location.href = response?.data.sessionUrl;
   } catch (error) {
     console.error("Booking failed:", error);
   } finally {
@@ -221,30 +206,15 @@ const nextStep = () => {
 
 const formatDate = (date: Date) => format(date, "MMM dd, yyyy");
 
-const findAddon = (id: string) => addons.find((addon) => addon.id === id);
-
-const formattedStart = computed(() => {
-  if (value?.value.start) {
-    return format(value?.value.start.toDate(timeZone), "iii, MMM dd");
-  }
-  return "";
-});
-const formattedEnd = computed(() => {
-  if (value?.value.end) {
-    return format(value?.value.end.toDate(timeZone), "iii, MMM dd");
-  }
-  return "";
-});
+// const findAddon = (id: string) => addons.find((addon) => addon.id === id);
 
 watch(
   value,
   (newValue) => {
-    searchStore.checkIn = newValue.start
-      ? format(newValue.start.toDate(timeZone), "yyyy-MM-dd")
-      : "";
-    searchStore.checkOut = newValue.end
-      ? format(newValue.end.toDate(timeZone), "yyyy-MM-dd")
-      : "";
+    searchStore.checkIn =
+      newValue && newValue[0] ? format(newValue[0], "yyyy-MM-dd") : "";
+    searchStore.checkOut =
+      newValue && newValue[1] ? format(newValue[1], "yyyy-MM-dd") : "";
     searchStore.setSearchParams({
       location: searchStore.location,
       checkIn: searchStore.checkIn,
@@ -307,6 +277,14 @@ const getAmenityIcon = (amenity: string) => {
     default:
       return null;
   }
+};
+
+const isDateUnavailable = (date: Date) => {
+  return isBefore(date, startOfDay(new Date()));
+};
+
+const handleDateChange = (val: [Date, Date]) => {
+  value.value = val;
 };
 </script>
 
@@ -435,59 +413,50 @@ const getAmenityIcon = (amenity: string) => {
               <div class="text-sm text-gray-600">per night</div>
             </div>
             <div class="flex md:justify-end items-end">
-              <Popover>
-                <PopoverTrigger class="" asChild>
-                  <Button
-                    variant="outline"
-                    class="justify-start text-left font-normal"
-                  >
-                    <Calendar class="w-5 h-5 mr-2 text-gray-500" />
-                    <div class="flex items-center">
-                      <div
-                        :class="[
-                          'font-medium',
-                          value?.start ? 'text-gray-900' : 'text-gray-400',
-                        ]"
-                      >
-                        {{ value?.start ? formattedStart : "Check-in" }}
-                      </div>
-                      <Minus class="mx-2 h-4 w-4 text-gray-400" />
-                      <div
-                        :class="[
-                          'font-medium',
-                          value?.end ? 'text-gray-900' : 'text-gray-400',
-                        ]"
-                      >
-                        {{ value?.end ? formattedEnd : "Check-out" }}
-                      </div>
-                    </div>
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent class="w-auto p-0" align="center">
-                  <RangeCalendar v-model="value" class="rounded-md border" />
-                </PopoverContent>
-              </Popover>
+              <div class="flex h-full">
+                <el-date-picker
+                  v-model="value"
+                  type="daterange"
+                  range-separator="To"
+                  start-placeholder="Start date"
+                  end-placeholder="End date"
+                  :disabled-date="isDateUnavailable"
+                  class="rounded-md"
+                  @change="handleDateChange"
+                />
+              </div>
             </div>
             <div class="text-sm text-gray-600 md:text-right">
               {{ numberOfNights }} night{{ numberOfNights > 1 ? "s" : "" }}
             </div>
           </div>
+          <!-- Guests Information -->
+          <div class="flex flex-wrap space-x-2">
+            <div class="flex items-centerspace-x-4">
+              <div class="flex items-center bg-gray-100 rounded-full px-3 py-1">
+                <Users class="w-4 h-4 mr-2 text-blue-500" />
+                <span class="text-sm text-gray-700">
+                  {{ bookingStore.adults }}
+                  {{ bookingStore.adults === 1 ? "Adult" : "Adults" }}
+                </span>
+              </div>
+            </div>
+            <div
+              v-if="bookingStore.children > 0"
+              class="flex items-center space-x-4"
+            >
+              <div class="flex items-center bg-gray-100 rounded-full px-3 py-1">
+                <Users class="w-4 h-4 mr-2 text-blue-500" />
+                <span class="text-sm text-gray-700">
+                  {{ bookingStore.children }}
+                  {{ bookingStore.children === 1 ? "Child" : "Children" }}
+                </span>
+              </div>
+            </div>
+          </div>
         </div>
 
         <Separator class="my-6" />
-
-        <!-- Selected Extras -->
-        <div v-if="bookingData.addons.length > 0" class="space-y-2 mb-6">
-          <h4 class="font-semibold text-gray-800">Selected Extras</h4>
-          <div
-            v-for="addonId in bookingData.addons"
-            :key="addonId"
-            class="flex justify-between text-sm"
-          >
-            <span class="text-gray-600">{{ findAddon(addonId)?.title }}</span>
-            <span class="font-medium">${{ findAddon(addonId)?.price }}</span>
-          </div>
-        </div>
 
         <!-- Price Breakdown -->
         <div class="space-y-2">
@@ -557,93 +526,7 @@ const getAmenityIcon = (amenity: string) => {
               </div>
             </div>
 
-            <div v-if="step === 2" class="grid gap-4">
-              <div
-                v-for="addon in addons"
-                :key="addon.id"
-                class="flex items-start space-x-4 p-4 border rounded-lg cursor-pointer hover:bg-accent"
-                @click="handleAddonToggle(addon.id)"
-              >
-                <div class="">
-                  <div
-                    :class="[
-                      'rounded-full p-2',
-                      bookingData.addons.includes(addon.id)
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted',
-                    ]"
-                  >
-                    <addon.icon class="w-4 h-4" />
-                  </div>
-                </div>
-                <div class="flex-1">
-                  <div class="flex justify-between">
-                    <h4 class="font-semibold">{{ addon.title }}</h4>
-                    <span>${{ addon.price }}</span>
-                  </div>
-                  <p class="text-sm text-muted-foreground">
-                    {{ addon.description }}
-                  </p>
-                </div>
-                <Checkbox
-                  :checked="bookingData.addons.includes(addon.id)"
-                  @change="handleAddonToggle(addon.id)"
-                />
-              </div>
-            </div>
-
-            <div v-if="step === 3" class="space-y-6">
-              <RadioGroup v-model="bookingData.paymentMethod">
-                <div class="flex items-center space-x-2">
-                  <RadioGroupItem value="credit-card" id="credit-card" />
-                  <Label for="credit-card" class="flex items-center">
-                    <CreditCard class="w-4 h-4 mr-2" />
-                    Credit Card
-                  </Label>
-                </div>
-                <div class="flex items-center space-x-2">
-                  <RadioGroupItem value="debit-card" id="debit-card" />
-                  <Label for="debit-card" class="flex items-center">
-                    <Building class="w-4 h-4 mr-2" />
-                    Debit Card
-                  </Label>
-                </div>
-              </RadioGroup>
-
-              <div class="space-y-4">
-                <div class="space-y-2">
-                  <Label for="cardNumber">Card Number</Label>
-                  <Input
-                    id="cardNumber"
-                    v-model="bookingData.cardNumber"
-                    placeholder="0000 0000 0000 0000"
-                  />
-                </div>
-                <div class="grid grid-cols-2 gap-4">
-                  <div class="space-y-2">
-                    <Label for="expiryDate">Expiry Date</Label>
-                    <Input
-                      id="expiryDate"
-                      v-model="bookingData.expiryDate"
-                      placeholder="MM/YY"
-                    />
-                  </div>
-                  <div class="space-y-2">
-                    <Label for="cvv">CVV</Label>
-                    <Input
-                      id="cvv"
-                      type="password"
-                      v-model="bookingData.cvv"
-                      maxLength="4"
-                    />
-                  </div>
-                </div>
-                <div class="flex items-center space-x-2">
-                  <Checkbox id="saveCard" v-model="bookingData.saveCard" />
-                  <Label for="saveCard">Save card for future bookings</Label>
-                </div>
-              </div>
-            </div>
+            <div v-if="step === 3" class="space-y-6"></div>
           </div>
         </transition>
       </CardContent>
