@@ -73,10 +73,10 @@ func main() {
 
 	// rooms handlers
 	apiv1.Get("/room", roomHandler.HandleGetRooms)
-	apiv1.Post("/room/:id/book", roomHandler.HandleBookRoom)
 
 	// bookings handlers
 	apiv1.Get("/booking/:id", bookingHandler.HandleGetBooking)
+	apiv1.Post("/room/book", roomHandler.HandleBookRoom)
 
 	// admin handlers
 	admin.Use(api.AdminAuth)
@@ -92,4 +92,5 @@ func init() {
 	if err := godotenv.Load(); err != nil {
 		log.Fatal(err)
 	}
+
 }
