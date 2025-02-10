@@ -29,13 +29,26 @@ type BookRoomParams struct {
 	NumPersons     int                `json:"numPersons"`
 }
 
-// func (p BookRoomParams) validate() error {
-// 	now := time.Now()
-// 	if now.After(p.FromDate) || now.After(p.TillDate) {
-// 		return fmt.Errorf("can't book a room in the past")
-// 	}
-// 	return nil
-// }
+func (p BookRoomParams) validate() error {
+	now := time.Now().Format("2006-01-02")
+	fromDate, err := time.Parse("2006-01-02", p.FromDate)
+	if err != nil {
+		return fmt.Errorf("invalid from date format")
+	}
+	tillDate, err := time.Parse("2006-01-02", p.TillDate)
+	if err != nil {
+		return fmt.Errorf("invalid till date format")
+	}
+
+	// Instead of comparing time.Now() with booking date, compare formatted dates
+	if now > fromDate.Format("2006-01-02") || now > tillDate.Format("2006-01-02") {
+		return fmt.Errorf("can't book a room in the past")
+	}
+	// if now.After(fromDate) || now.After(tillDate) {
+	// 	return fmt.Errorf("can't book a room in the past")
+	// }
+	return nil
+}
 
 type RoomHandler struct {
 	store *db.Store
@@ -63,11 +76,13 @@ func (h *RoomHandler) HandleGetRooms(c *fiber.Ctx) error {
 func (h *RoomHandler) HandleBookRoom(c *fiber.Ctx) error {
 	var params BookRoomParams
 	if err := c.BodyParser(&params); err != nil {
-		return err
+		fmt.Println(err)
+		return NewError(http.StatusBadRequest, "invalid request body")
 	}
-	// if err := params.validate(); err != nil {
-	// 	return err
-	// }
+	if err := params.validate(); err != nil {
+		fmt.Println(err)
+		return NewError(http.StatusBadRequest, err.Error())
+	}
 
 	// Parse dates from "yyyy-MM-dd" format
 	fromDate, err := time.Parse("2006-01-02", params.FromDate)
@@ -124,6 +139,31 @@ func (h *RoomHandler) HandleBookRoom(c *fiber.Ctx) error {
 	numNights := int(tillDate.Sub(fromDate).Hours() / 24)
 	totalAmount := room.Price * float64(numNights) * 100
 
+	fmt.Print("data", hotel, room)
+
+	// Create a booking
+	booking := &types.Booking{
+		UserID:     user.ID,
+		RoomID:     roomID,
+		NumPersons: params.NumPersons,
+		FromDate:   fromDate,
+		TillDate:   tillDate,
+		Canceled:   false,
+		Status:     types.Pending,
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
+		Hotel:      *hotel,
+		Room:       *room,
+	}
+
+	_, err = h.store.Booking.InsertBooking(c.Context(), booking)
+	if err != nil {
+		fmt.Println(err)
+		return NewError(http.StatusInternalServerError, "failed to create booking")
+	}
+
+	fmt.Println("Booking created")
+
 	// Create a Stripe Checkout Session
 	stripe.Key = os.Getenv("STRIPE_SECRET_KEY")
 	domain := os.Getenv("DOMAIN")
@@ -155,6 +195,7 @@ func (h *RoomHandler) HandleBookRoom(c *fiber.Ctx) error {
 		SuccessURL: stripe.String(domain + "/booking-success?session_id={CHECKOUT_SESSION_ID}"),
 		CancelURL:  stripe.String(domain + "/booking-cancel"),
 		Metadata: map[string]string{
+			"booking_id":  booking.ID.Hex(),
 			"room_id":     roomID.Hex(),
 			"user_id":     user.ID.Hex(),
 			"from_date":   fromDate.Format(time.RFC3339),
@@ -163,8 +204,9 @@ func (h *RoomHandler) HandleBookRoom(c *fiber.Ctx) error {
 		},
 	}
 
-	s, err := session.New(checkoutParams)
+	session, err := session.New(checkoutParams)
 	if err != nil {
+		_ = h.store.Booking.UpdateBooking(c.Context(), booking.ID.Hex(), bson.M{"status": types.Canceled})
 		return c.Status(http.StatusInternalServerError).JSON(genericResp{
 			Type: "error",
 			Msg:  "failed to create checkout session",
@@ -172,27 +214,8 @@ func (h *RoomHandler) HandleBookRoom(c *fiber.Ctx) error {
 	}
 
 	// Return the session URL for frontend redirection
-	return c.JSON(fiber.Map{"sessionUrl": s.URL})
+	return c.JSON(fiber.Map{"sessionUrl": session.URL})
 }
-
-// func (h *RoomHandler) isRoomAvailabeForBooking(ctx context.Context, roomID primitive.ObjectID, params BookRoomParams) (bool, error) {
-// 	where := bson.M{
-// 		"roomID": roomID,
-// 		"fromDate": bson.M{
-// 			"$gte": params.FromDate,
-// 		},
-// 		"tillDate": bson.M{
-// 			"$lte": params.TillDate,
-// 		},
-// 	}
-// 	bookings, err := h.store.Booking.GetBookings(ctx, where)
-// 	if err != nil {
-// 		return false, err
-// 	}
-// 	ok := len(bookings) == 0
-
-// 	return ok, nil
-// }
 
 func (h *RoomHandler) getAvailableRoom(ctx context.Context, hotelID primitive.ObjectID, roomName string, params BookRoomParams) (*primitive.ObjectID, error) {
 	rooms, err := h.store.Room.GetRoomsSearch(ctx, bson.M{
