@@ -188,7 +188,9 @@ const handleSubmit = async () => {
     const response = await bookRoom(data);
     console.log(response?.data);
     // Redirect to Stripe Checkout
-    window.location.href = response?.data.sessionUrl;
+    if (response?.data.sessionUrl) {
+      window.location.href = response?.data.sessionUrl;
+    }
   } catch (error) {
     console.error("Booking failed:", error);
   } finally {
