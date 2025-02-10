@@ -38,16 +38,20 @@ func main() {
 			User:    userStore,
 			Booking: bookingStore,
 		}
-		userHandler    = api.NewUserHandler(userStore)
-		hotelHandler   = api.NewHotelHandler(store)
-		authHandler    = api.NewAuthHandler(userStore)
-		roomHandler    = api.NewRoomHandler(store)
-		bookingHandler = api.NewBookingHandler(store)
-		app            = fiber.New(config)
-		auth           = app.Group("/api/v1")
-		apiv1          = app.Group("/api/v1")
-		admin          = apiv1.Group("/admin")
+		userHandler          = api.NewUserHandler(userStore)
+		hotelHandler         = api.NewHotelHandler(store)
+		authHandler          = api.NewAuthHandler(userStore)
+		roomHandler          = api.NewRoomHandler(store)
+		bookingHandler       = api.NewBookingHandler(store)
+		stripeWebhookHandler = api.NewStripeWebhookHandler(store)
+		app                  = fiber.New(config)
+		auth                 = app.Group("/api/v1")
+		apiv1                = app.Group("/api/v1")
+		admin                = apiv1.Group("/admin")
 	)
+
+	// stripe webhook
+	app.Post("/api/v1/stripe/webhook", stripeWebhookHandler.HandleStripeWebhook)
 	app.Use(cors.New())
 	// auth
 	auth.Post("/auth", authHandler.HandleAuthenticate)
