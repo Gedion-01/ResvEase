@@ -39,14 +39,9 @@ func (p BookRoomParams) validate() error {
 	if err != nil {
 		return fmt.Errorf("invalid till date format")
 	}
-
-	// Instead of comparing time.Now() with booking date, compare formatted dates
 	if now > fromDate.Format("2006-01-02") || now > tillDate.Format("2006-01-02") {
 		return fmt.Errorf("can't book a room in the past")
 	}
-	// if now.After(fromDate) || now.After(tillDate) {
-	// 	return fmt.Errorf("can't book a room in the past")
-	// }
 	return nil
 }
 
@@ -76,11 +71,9 @@ func (h *RoomHandler) HandleGetRooms(c *fiber.Ctx) error {
 func (h *RoomHandler) HandleBookRoom(c *fiber.Ctx) error {
 	var params BookRoomParams
 	if err := c.BodyParser(&params); err != nil {
-		fmt.Println(err)
 		return NewError(http.StatusBadRequest, "invalid request body")
 	}
 	if err := params.validate(); err != nil {
-		fmt.Println(err)
 		return NewError(http.StatusBadRequest, err.Error())
 	}
 
@@ -92,6 +85,7 @@ func (h *RoomHandler) HandleBookRoom(c *fiber.Ctx) error {
 			Msg:  "invalid from date format",
 		})
 	}
+	fromDate = fromDate.UTC()
 	tillDate, err := time.Parse("2006-01-02", params.TillDate)
 	if err != nil {
 		return c.Status(http.StatusBadRequest).JSON(genericResp{
@@ -99,16 +93,14 @@ func (h *RoomHandler) HandleBookRoom(c *fiber.Ctx) error {
 			Msg:  "invalid till date format",
 		})
 	}
+	tillDate = tillDate.UTC()
 
 	hotelID := params.HotelID
 
 	// Find an available room by hotel and room name
-	roomIDPtr, err := h.getAvailableRoom(c.Context(), hotelID, params.RoomName, params)
+	roomIDPtr, err := h.getAvailableRoom(c.Context(), hotelID, params.RoomName, fromDate, tillDate)
 	if err != nil {
-		return c.Status(http.StatusBadRequest).JSON(genericResp{
-			Type: "error",
-			Msg:  fmt.Sprintf("no available rooms: %v", err),
-		})
+		return NewError(http.StatusBadRequest, err.Error())
 	}
 	roomID := *roomIDPtr
 
@@ -139,7 +131,14 @@ func (h *RoomHandler) HandleBookRoom(c *fiber.Ctx) error {
 	numNights := int(tillDate.Sub(fromDate).Hours() / 24)
 	totalAmount := room.Price * float64(numNights) * 100
 
-	fmt.Print("data", hotel, room)
+	status, err := h.store.Booking.IsBooked(c.Context(), roomID.Hex(), fromDate.Format("2006-01-02"), tillDate.Format("2006-01-02"))
+	if err != nil {
+		return NewError(http.StatusInternalServerError, "failed to check room availability")
+	}
+
+	if status {
+		return NewError(http.StatusBadRequest, "room is booked, please choose another room")
+	}
 
 	// Create a booking
 	booking := &types.Booking{
@@ -158,11 +157,8 @@ func (h *RoomHandler) HandleBookRoom(c *fiber.Ctx) error {
 
 	_, err = h.store.Booking.InsertBooking(c.Context(), booking)
 	if err != nil {
-		fmt.Println(err)
 		return NewError(http.StatusInternalServerError, "failed to create booking")
 	}
-
-	fmt.Println("Booking created")
 
 	// Create a Stripe Checkout Session
 	stripe.Key = os.Getenv("STRIPE_SECRET_KEY")
@@ -217,7 +213,7 @@ func (h *RoomHandler) HandleBookRoom(c *fiber.Ctx) error {
 	return c.JSON(fiber.Map{"sessionUrl": session.URL})
 }
 
-func (h *RoomHandler) getAvailableRoom(ctx context.Context, hotelID primitive.ObjectID, roomName string, params BookRoomParams) (*primitive.ObjectID, error) {
+func (h *RoomHandler) getAvailableRoom(ctx context.Context, hotelID primitive.ObjectID, roomName string, fromDate time.Time, tillDate time.Time) (*primitive.ObjectID, error) {
 	rooms, err := h.store.Room.GetRoomsSearch(ctx, bson.M{
 		"hotelID": hotelID,
 		"name":    roomName,
@@ -235,10 +231,10 @@ func (h *RoomHandler) getAvailableRoom(ctx context.Context, hotelID primitive.Ob
 		where := bson.M{
 			"roomID": room.ID,
 			"fromDate": bson.M{
-				"$gte": params.FromDate,
+				"$lt": tillDate,
 			},
 			"tillDate": bson.M{
-				"$lte": params.TillDate,
+				"$gt": fromDate,
 			},
 		}
 
