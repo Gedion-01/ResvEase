@@ -1,7 +1,6 @@
 package api
 
 import (
-	"fmt"
 	"hotel-reservation/db"
 	"net/http"
 	"strconv"
@@ -68,13 +67,6 @@ func (h *HotelHandler) HandleGetRooms(c *fiber.Ctx) error {
 	if err != nil {
 		return ErrInvalidID()
 	}
-
-	// filter := bson.M{"hotelID": oid}
-	// rooms, err := h.store.Room.GetRooms(c.Context(), filter)
-	// if err != nil {
-	// 	return ErrResourceNotFound("hotel")
-	// }
-	// return c.JSON(rooms)
 	var params HotelRoomParams
 	if err := c.QueryParser(&params); err != nil {
 		return ErrBadRequest()
@@ -98,6 +90,7 @@ func (h *HotelHandler) HandleGetRooms(c *fiber.Ctx) error {
 			Msg:  "invalid fromDate",
 		})
 	}
+	fromDate = fromDate.UTC()
 
 	tillDate, err := time.Parse(dateFormat, tillDateStr)
 	if err != nil {
@@ -106,8 +99,8 @@ func (h *HotelHandler) HandleGetRooms(c *fiber.Ctx) error {
 			Msg:  "invalid tillDate",
 		})
 	}
+	tillDate = tillDate.UTC()
 
-	// Parse pagination parameters
 	pageStr := c.Query("page", "1")
 	limitStr := c.Query("limit", "10")
 
@@ -223,7 +216,7 @@ type HotelQueryParams struct {
 }
 
 func (h *HotelHandler) HandleGetHotels(c *fiber.Ctx) error {
-	fmt.Println("HandleGetHotels")
+
 	var params HotelQueryParams
 	if err := c.QueryParser(&params); err != nil {
 		return ErrBadRequest()

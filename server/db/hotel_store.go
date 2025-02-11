@@ -44,9 +44,6 @@ func (s *MongoHotelStore) GetHotelByID(ctx context.Context, id string) (*types.H
 }
 
 func (s *MongoHotelStore) GetHotels(ctx context.Context, filter Map, page *Pagination, minPrice, maxPrice float64) ([]*types.Hotel, error) {
-	// Log the filter
-	fmt.Printf("filter: %+v\n", filter)
-
 	pipeline := []bson.M{
 		{"$match": filter},
 		{"$lookup": bson.M{
@@ -123,8 +120,6 @@ func (s *MongoHotelStore) GetHotels(ctx context.Context, filter Map, page *Pagin
 	if err := cursor.All(ctx, &hotels); err != nil {
 		return nil, fmt.Errorf("cursor error: %v", err)
 	}
-
-	fmt.Println("hotels")
 
 	if len(hotels) == 0 {
 		fmt.Println("hotel resource not found")

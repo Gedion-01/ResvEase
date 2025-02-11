@@ -15,6 +15,7 @@ type BookingStore interface {
 	GetBookings(context.Context, bson.M) ([]*types.Booking, error)
 	GetBookingByID(context.Context, string) (*types.Booking, error)
 	UpdateBooking(context.Context, string, bson.M) error
+	IsBooked(context.Context, string, string, string) (bool, error)
 }
 
 type MongoBookingStore struct {
@@ -71,4 +72,22 @@ func (s *MongoBookingStore) InsertBooking(ctx context.Context, booking *types.Bo
 	}
 	booking.ID = resp.InsertedID.(primitive.ObjectID)
 	return booking, nil
+}
+
+func (s *MongoBookingStore) IsBooked(ctx context.Context, roomID, fromDate, tillDate string) (bool, error) {
+	rooms, err := s.GetBookings(ctx, bson.M{
+		"roomID": roomID,
+		"fromDate": bson.M{
+			"$gte": fromDate,
+		},
+		"tillDate": bson.M{
+			"$lte": tillDate,
+		},
+		"cancelled": false,
+		"status":    types.Confirmed,
+	})
+	if err != nil {
+		return false, err
+	}
+	return len(rooms) > 0, nil
 }
