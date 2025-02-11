@@ -81,27 +81,12 @@ const { data, isLoading, isFetching, refetch } = useRooms(
   props.hotel.id,
   queryParams
 );
+console.log(data);
 
 const loginPromptDialogRef = ref();
 
 const selectedRoom = ref<string>("");
 const currentImageIndex = ref<{ [key: string]: number }>({});
-
-const animationDirection = ref<"slide-left" | "slide-right">("slide-left");
-
-const handleImageNavigation = (roomId: string, direction: "prev" | "next") => {
-  animationDirection.value =
-    direction === "next" ? "slide-left" : "slide-right";
-  const currentIndex = currentImageIndex.value[roomId] || 0;
-  const room = data.value?.data.find((room) => room.id === roomId);
-  if (!room) return;
-
-  const newIndex =
-    (currentIndex + (direction === "next" ? 1 : -1) + room.images.length) %
-    room.images.length;
-
-  currentImageIndex.value[roomId] = newIndex;
-};
 
 const getAmenityIcon = (amenity: string) => {
   switch (amenity) {
@@ -307,6 +292,7 @@ const reserveRoom = (room: Room) => {
 
 <template>
   <div class="space-y-6">
+    {{ JSON.stringify(data) }}
     <div class="space-y-4">
       <div class="flex items-center justify-between">
         <h2 class="text-2xl font-bold">Select Your Room</h2>
