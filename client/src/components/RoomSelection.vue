@@ -292,7 +292,6 @@ const reserveRoom = (room: Room) => {
 
 <template>
   <div class="space-y-6">
-    {{ JSON.stringify(data) }}
     <div class="space-y-4">
       <div class="flex items-center justify-between">
         <h2 class="text-2xl font-bold">Select Your Room</h2>
@@ -373,6 +372,20 @@ const reserveRoom = (room: Room) => {
                   class="absolute right-2 top-1/2 -translate-y-1/2 h-8 w-8 rounded-lg"
                   @click.stop
                 />
+                <div
+                  :class="[
+                    'absolute top-2 right-2 text-white px-2 py-1 rounded-full text-sm font-semibold',
+                    room.availableCount > 0
+                      ? 'bg-black bg-opacity-50'
+                      : 'bg-red-500',
+                  ]"
+                >
+                  {{
+                    room.availableCount > 0
+                      ? `${room.availableCount} left`
+                      : "Sold out"
+                  }}
+                </div>
               </Carousel>
               <DialogContent class="max-w-4xl">
                 <div class="grid gap-4">
@@ -414,6 +427,15 @@ const reserveRoom = (room: Room) => {
           <p class="text-sm text-muted-foreground mb-4">
             {{ room.description }}
           </p>
+          <!-- <p className="text-sm font-semibold text-orange-500 mb-2">
+            {{
+              room.availableCount > 0
+                ? `${room.availableCount} room${
+                    room.availableCount !== 1 ? "s" : ""
+                  } left`
+                : "Sold out"
+            }}
+          </p> -->
           <div class="flex flex-wrap justify-between gap-3 mb-4">
             <span class="flex gap-2">
               <Bed class="h-5 w-5" />
