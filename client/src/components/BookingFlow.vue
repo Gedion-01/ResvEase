@@ -1,11 +1,7 @@
 <script setup lang="ts">
-import { type Ref, ref, reactive, computed, watch, onMounted } from "vue";
-import { useRouter } from "vue-router";
-import { format, addDays, isBefore, startOfDay } from "date-fns";
+import { ref, reactive, computed, watch } from "vue";
+import { format, isBefore, startOfDay } from "date-fns";
 import { useRoomBookingStore } from "@/store/bookingStore";
-import type { DateRange } from "radix-vue";
-import { RangeCalendar } from "@/components/ui/range-calendar";
-import { getLocalTimeZone, parseDate } from "@internationalized/date";
 
 import {
   Card,
@@ -15,11 +11,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,12 +18,9 @@ import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 
 import {
-  CreditCard,
   Building,
   Coffee,
-  Car,
   Wifi,
-  Calendar,
   PocketKnife,
   Spade,
   Utensils,
@@ -49,13 +37,11 @@ import {
   Music,
   MapPin,
   Star,
-  Minus,
   Bath,
   Mountain,
   Waves,
   ShowerHead,
   Users,
-  User,
 } from "lucide-vue-next";
 
 interface Room {
@@ -66,26 +52,12 @@ interface Room {
   bedType: string;
 }
 
-interface BookingFlowProps {
-  room: Room;
-  checkIn: Date;
-  checkOut: Date;
-}
-
 import { CheckCircle2 } from "lucide-vue-next";
 import { useSearchStore } from "@/store/searchStore";
 import axios from "axios";
-import { BASE_URL, bookRoom } from "@/services/api";
+import { bookRoom } from "@/services/api";
+import BookingErrorDialog from "@/components/popups/BookingErrorDialog.vue";
 
-interface BookingFlowProps {
-  room: Room;
-  checkIn: Date;
-  checkOut: Date;
-}
-
-const props = defineProps<BookingFlowProps>();
-
-const router = useRouter();
 const step = ref(1);
 const loading = ref(false);
 
@@ -96,14 +68,6 @@ searchStore.loadSearchParams();
 bookingStore.loadBookingData();
 
 console.log(bookingStore.hotel);
-
-const timeZone = getLocalTimeZone();
-const start = searchStore.checkIn
-  ? parseDate(searchStore.checkIn)
-  : parseDate(new Date().toISOString().split("T")[0]);
-const end = searchStore.checkOut
-  ? parseDate(searchStore.checkOut)
-  : parseDate(addDays(new Date(), 1).toISOString().split("T")[0]);
 
 const value = ref<[Date, Date]>([
   new Date(searchStore.checkIn),
@@ -118,6 +82,8 @@ const bookingData = reactive({
   specialRequests: "",
   addons: [] as string[],
 });
+
+const errorType = ref("");
 
 const numberOfNights = computed(() =>
   Math.ceil(
@@ -136,21 +102,6 @@ const totalPrice = computed(
   () => basePrice.value + taxes.value + addonsPrice.value
 );
 
-const handleAddonToggle = (addonId: string) => {
-  const index = bookingData.addons.indexOf(addonId);
-  if (index > -1) {
-    bookingData.addons.splice(index, 1);
-  } else {
-    bookingData.addons.push(addonId);
-  }
-};
-
-const handleInputChange = (event: Event) => {
-  const target = event.target as HTMLInputElement;
-  (bookingData[target.name as keyof typeof bookingData] as string) =
-    target.value;
-};
-
 const validateStep = () => {
   switch (step.value) {
     case 1:
@@ -161,11 +112,21 @@ const validateStep = () => {
         bookingData.phone
       );
     case 2:
-      return true; // Add-ons are optional
+      return true;
     case 3:
       return true;
     default:
       return false;
+  }
+};
+
+const bookingErrorDialogRef = ref<InstanceType<
+  typeof BookingErrorDialog
+> | null>(null);
+
+const openDialog = () => {
+  if (bookingErrorDialogRef.value) {
+    bookingErrorDialogRef.value.openDialog();
   }
 };
 
@@ -192,6 +153,31 @@ const handleSubmit = async () => {
       window.location.href = response?.data.sessionUrl;
     }
   } catch (error) {
+    if (
+      axios.isAxiosError(error) &&
+      error.response?.data.error ===
+        "no available rooms for the given date range in this hotel"
+    ) {
+      errorType.value =
+        "no available rooms for the given date range in this hotel";
+      openDialog();
+    } else if (
+      axios.isAxiosError(error) &&
+      error.response?.data.error ===
+        "room is booked, please choose another room"
+    ) {
+      errorType.value = "room is booked, please choose another room";
+      openDialog();
+    } else if (
+      axios.isAxiosError(error) &&
+      error.response?.data.error === "failed to create booking"
+    ) {
+      errorType.value = "failed to create booking";
+      openDialog();
+    } else {
+      errorType.value = "an unknown error occurred";
+      openDialog();
+    }
     console.error("Booking failed:", error);
   } finally {
     loading.value = false;
@@ -205,10 +191,6 @@ const nextStep = () => {
     step.value += 1;
   }
 };
-
-const formatDate = (date: Date) => format(date, "MMM dd, yyyy");
-
-// const findAddon = (id: string) => addons.find((addon) => addon.id === id);
 
 watch(
   value,
@@ -233,9 +215,9 @@ const getAmenityIcon = (amenity: string) => {
     case "Free Wi-Fi":
       return Wifi;
     case "Swimming Pool":
-      return PocketKnife; // Using PocketKnife as a substitute for Pool
+      return PocketKnife;
     case "Spa":
-      return Spade; // Using Spade as a substitute for Spa
+      return Spade;
     case "Gym":
       return Dumbbell;
     case "Free Parking":
@@ -247,7 +229,7 @@ const getAmenityIcon = (amenity: string) => {
     case "Rooftop Bar":
       return Martini;
     case "Outdoor swimming pool":
-      return PocketKnife; // Using PocketKnife as a substitute for Pool
+      return PocketKnife;
     case "Sauna":
       return Thermometer;
     case "24/7 Room Service":
@@ -551,4 +533,5 @@ const handleDateChange = (val: [Date, Date]) => {
       </CardFooter>
     </Card>
   </div>
+  <BookingErrorDialog :errorType="errorType" ref="bookingErrorDialogRef" />
 </template>
