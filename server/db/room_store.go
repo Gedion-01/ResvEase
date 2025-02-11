@@ -42,97 +42,102 @@ func (s *MongoRoomStore) GetRooms(
 	fromDate, tillDate *time.Time,
 	page, limit int,
 ) ([]*types.GroupedRoom, error) {
-
-	pipeline := []bson.M{}
-
-	// Match the hotel filters (contains _id if you want a specific hotel)
-	pipeline = append(pipeline, bson.M{
-		"$match": hotelFilters,
-	})
-
-	// Look up booking documents that reference these rooms
-	pipeline = append(pipeline, bson.M{
-		"$lookup": bson.M{
-			"from":         "bookings",
-			"localField":   "_id",
-			"foreignField": "roomID",
-			"as":           "bookings",
+	pipeline := []bson.M{
+		// Step 1: Filter rooms by hotelID
+		{
+			"$match": bson.M{"hotelID": hotelFilters["hotelID"]},
 		},
-	})
-
-	// Unwind bookings so we can filter on date range
-	pipeline = append(pipeline, bson.M{
-		"$unwind": bson.M{
-			"path":                       "$bookings",
-			"preserveNullAndEmptyArrays": true,
+		// Step 2: Apply room filters (e.g., price, capacity)
+		{
+			"$match": roomFilters,
 		},
-	})
-
-	// Filter out rooms that are booked within [fromDate, tillDate] (unless canceled)
-	pipeline = append(pipeline, bson.M{
-		"$match": bson.M{
-			"$or": []bson.M{
-				// No bookings at all => keep room
-				{"bookings": bson.M{"$exists": false}},
-				// Booking is canceled => keep room
-				{"bookings.canceled": true},
-				// Booking starts after the requested end => no overlap
-				{"bookings.fromDate": bson.M{"$gte": tillDate}},
-				// Booking ends before the requested start => no overlap
-				{"bookings.tillDate": bson.M{"$lte": fromDate}},
+		// Step 3: Look up bookings for each room
+		{
+			"$lookup": bson.M{
+				"from":         "bookings",
+				"localField":   "_id",
+				"foreignField": "roomID",
+				"as":           "bookings",
 			},
 		},
-	})
-
-	// If more room-specific filters exist, apply them
-	if len(roomFilters) > 0 {
-		pipeline = append(pipeline, bson.M{"$match": roomFilters})
-	}
-
-	// Group by room name to count how many individual rooms share that name
-	pipeline = append(pipeline, bson.M{
-		"$group": bson.M{
-			"_id": bson.M{
-				"hotelID": "$hotelID",
-				"name":    "$name",
-			},
-			"id":          bson.M{"$first": "$_id"},
-			"name":        bson.M{"$first": "$name"},
-			"description": bson.M{"$first": "$description"},
-			"price":       bson.M{"$first": "$price"},
-			"capacity":    bson.M{"$first": "$capacity"},
-			"amenities":   bson.M{"$first": "$amenities"},
-			"images":      bson.M{"$first": "$images"},
-			"bedType":     bson.M{"$first": "$bedType"},
-			"bedrooms":    bson.M{"$first": "$bedrooms"},
-			"availableCount": bson.M{
-				"$sum": bson.M{
-					"$cond": []interface{}{"$available", 1, 0},
+		// Step 4: Check for overlapping bookings (INCLUSIVE comparison)
+		{
+			"$addFields": bson.M{
+				"isBooked": bson.M{
+					"$gt": []interface{}{
+						bson.M{
+							"$size": bson.M{
+								"$filter": bson.M{
+									"input": "$bookings",
+									"as":    "booking",
+									"cond": bson.M{
+										"$and": []bson.M{
+											{"$eq": []interface{}{"$$booking.canceled", false}},
+											// Overlap condition: booking.fromDate <= tillDate AND booking.tillDate >= fromDate
+											{"$lte": []interface{}{"$$booking.fromDate", tillDate}},
+											{"$gte": []interface{}{"$$booking.tillDate", fromDate}},
+										},
+									},
+								},
+							},
+						},
+						0,
+					},
 				},
 			},
 		},
-	})
-
-	// Pagination
-	pipeline = append(pipeline, bson.M{"$skip": (page - 1) * limit})
-	pipeline = append(pipeline, bson.M{"$limit": limit})
-
-	// Final projection
-	pipeline = append(pipeline, bson.M{
-		"$project": bson.M{
-			"_id":            0,
-			"id":             1,
-			"name":           1,
-			"description":    1,
-			"price":          1,
-			"capacity":       1,
-			"amenities":      1,
-			"images":         1,
-			"bedType":        1,
-			"bedrooms":       1,
-			"availableCount": 1,
+		// Step 5: Group by room name and hotelID
+		{
+			"$group": bson.M{
+				"_id": bson.M{
+					"hotelID": "$hotelID",
+					"name":    "$name",
+				},
+				"id":          bson.M{"$first": "$_id"},
+				"name":        bson.M{"$first": "$name"},
+				"description": bson.M{"$first": "$description"},
+				"price":       bson.M{"$first": "$price"},
+				"capacity":    bson.M{"$first": "$capacity"},
+				"amenities":   bson.M{"$first": "$amenities"},
+				"images":      bson.M{"$first": "$images"},
+				"bedType":     bson.M{"$first": "$bedType"},
+				"bedrooms":    bson.M{"$first": "$bedrooms"},
+				"totalCount":  bson.M{"$sum": 1}, // Total rooms of this type
+				"bookedCount": bson.M{"$sum": bson.M{"$cond": []interface{}{"$isBooked", 1, 0}}},
+			},
 		},
-	})
+		// Step 6: Calculate availableCount
+		{
+			"$addFields": bson.M{
+				"availableCount": bson.M{
+					"$subtract": []interface{}{"$totalCount", "$bookedCount"},
+				},
+			},
+		},
+		// Step 7: Pagination
+		{
+			"$skip": (page - 1) * limit,
+		},
+		{
+			"$limit": limit,
+		},
+		// Step 8: Final projection
+		{
+			"$project": bson.M{
+				"_id":            0,
+				"id":             1,
+				"name":           1,
+				"description":    1,
+				"price":          1,
+				"capacity":       1,
+				"amenities":      1,
+				"images":         1,
+				"bedType":        1,
+				"bedrooms":       1,
+				"availableCount": 1,
+			},
+		},
+	}
 
 	cursor, err := s.coll.Aggregate(ctx, pipeline)
 	if err != nil {
