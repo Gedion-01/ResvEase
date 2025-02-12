@@ -1,4 +1,5 @@
 import { useAuthStore } from "@/store/authStore";
+import { type Booking, type BookingsResponse } from "@/types/booking";
 import {
   type RoomResponse,
   type HotelResponse,
@@ -91,5 +92,17 @@ export const bookRoom = async (data: BookingData) => {
     console.log(err);
     throw err;
   }
+};
+
+export const getUserBookings = async (userID: string) => {
+  const response = await apiClient.get<BookingsResponse>(
+    `/bookings/user/${userID}?page=1&limit=10`
+  );
+  return response.data;
+};
+
+export const getBooking = async (bookingID: string) => {
+  const response = await apiClient.get<Booking>(`/booking/${bookingID}`);
+  return response.data;
 };
 export default apiClient;
