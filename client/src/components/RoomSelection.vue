@@ -57,6 +57,8 @@ const searchStore = useSearchStore();
 const bookingStore = useRoomBookingStore();
 const authStore = useAuthStore();
 
+console.log(authStore);
+
 const route = useRoute();
 const router = useRouter();
 
@@ -427,15 +429,6 @@ const reserveRoom = (room: Room) => {
           <p class="text-sm text-muted-foreground mb-4">
             {{ room.description }}
           </p>
-          <!-- <p className="text-sm font-semibold text-orange-500 mb-2">
-            {{
-              room.availableCount > 0
-                ? `${room.availableCount} room${
-                    room.availableCount !== 1 ? "s" : ""
-                  } left`
-                : "Sold out"
-            }}
-          </p> -->
           <div class="flex flex-wrap justify-between gap-3 mb-4">
             <span class="flex gap-2">
               <Bed class="h-5 w-5" />
@@ -462,7 +455,11 @@ const reserveRoom = (room: Room) => {
               <span class="text-2xl font-bold">${{ room.price }}</span>
               <span class="text-muted-foreground">/night</span>
             </div>
-            <Button @click="reserveRoom(room)" variant="default">
+            <Button
+              :disabled="room.availableCount === 0"
+              @click="reserveRoom(room)"
+              variant="default"
+            >
               Reserve</Button
             >
           </div>
