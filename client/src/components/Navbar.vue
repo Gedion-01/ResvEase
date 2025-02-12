@@ -28,6 +28,9 @@ const handleLogout = () => {
           <nav class="flex items-center space-x-6 text-sm font-medium">
             <RouterLink to="/search">Search</RouterLink>
             <RouterLink to="/deals">Deals</RouterLink>
+            <RouterLink v-if="authStore.isAuthenticated === true" to="/bookings"
+              >My Bookings</RouterLink
+            >
             <RouterLink to="/account">My Account</RouterLink>
           </nav>
         </div>
