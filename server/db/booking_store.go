@@ -8,14 +8,17 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 type BookingStore interface {
 	InsertBooking(context.Context, *types.Booking) (*types.Booking, error)
-	GetBookings(context.Context, bson.M) ([]*types.Booking, error)
+	GetBookings(context.Context, bson.M, int, int) ([]*types.Booking, error)
+	GetBooking(context.Context, bson.M) (*types.Booking, error)
 	GetBookingByID(context.Context, string) (*types.Booking, error)
 	UpdateBooking(context.Context, string, bson.M) error
 	IsBooked(context.Context, string, string, string) (bool, error)
+	Exists(context.Context, bson.M) (bool, error)
 }
 
 type MongoBookingStore struct {
@@ -41,8 +44,9 @@ func (s *MongoBookingStore) UpdateBooking(ctx context.Context, id string, update
 	return err
 }
 
-func (s *MongoBookingStore) GetBookings(ctx context.Context, filter bson.M) ([]*types.Booking, error) {
-	curr, err := s.coll.Find(ctx, filter)
+func (s *MongoBookingStore) GetBookings(ctx context.Context, filter bson.M, page int, limit int) ([]*types.Booking, error) {
+	opts := options.Find().SetSkip(int64((page - 1) * limit)).SetLimit(int64(limit))
+	curr, err := s.coll.Find(ctx, filter, opts)
 	if err != nil {
 		return nil, err
 	}
@@ -51,6 +55,18 @@ func (s *MongoBookingStore) GetBookings(ctx context.Context, filter bson.M) ([]*
 		return nil, err
 	}
 	return bookings, nil
+}
+
+func (s *MongoBookingStore) GetBooking(ctx context.Context, filter bson.M) (*types.Booking, error) {
+	result := s.coll.FindOne(ctx, filter)
+	if result.Err() != nil {
+		return nil, result.Err()
+	}
+	var booking types.Booking
+	if err := result.Decode(&booking); err != nil {
+		return nil, err
+	}
+	return &booking, nil
 }
 
 func (s *MongoBookingStore) GetBookingByID(ctx context.Context, id string) (*types.Booking, error) {
@@ -74,8 +90,20 @@ func (s *MongoBookingStore) InsertBooking(ctx context.Context, booking *types.Bo
 	return booking, nil
 }
 
+func (s *MongoBookingStore) Exists(ctx context.Context, filter bson.M) (bool, error) {
+	var result bson.M
+	err := s.coll.FindOne(ctx, filter).Decode(&result)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return false, nil
+		}
+		return false, err
+	}
+	return true, nil
+}
+
 func (s *MongoBookingStore) IsBooked(ctx context.Context, roomID, fromDate, tillDate string) (bool, error) {
-	rooms, err := s.GetBookings(ctx, bson.M{
+	where := bson.M{
 		"roomID": roomID,
 		"fromDate": bson.M{
 			"$gte": fromDate,
@@ -85,9 +113,6 @@ func (s *MongoBookingStore) IsBooked(ctx context.Context, roomID, fromDate, till
 		},
 		"cancelled": false,
 		"status":    types.Confirmed,
-	})
-	if err != nil {
-		return false, err
 	}
-	return len(rooms) > 0, nil
+	return s.Exists(ctx, where)
 }
