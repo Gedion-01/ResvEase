@@ -4,6 +4,8 @@ import SearchVue from "@/views/SearchView.vue";
 import HotelView from "@/views/HotelView.vue";
 import BookView from "@/views/BookView.vue";
 import AuthView from "@/views/AuthView.vue";
+import BookingsView from "@/views/BookingsView.vue";
+import BookingDetailsView from "@/views/BookingDetailsView.vue";
 import { useAuthStore } from "@/store/authStore";
 
 const router = createRouter({
@@ -35,6 +37,18 @@ const router = createRouter({
       name: "Auth",
       component: AuthView,
       meta: { requiresGuest: true },
+    },
+    {
+      path: "/bookings",
+      name: "Bookings",
+      component: BookingsView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: "/booking-details/:id",
+      name: "BookingDetails",
+      component: BookingDetailsView,
+      meta: { requiresAuth: true },
     },
   ],
 });

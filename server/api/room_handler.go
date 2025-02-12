@@ -22,6 +22,7 @@ type BookRoomParams struct {
 	RoomName       string             `json:"roomName"`
 	FirstName      string             `json:"firstName"`
 	LastName       string             `json:"lastName"`
+	Email          string             `json:"email"`
 	Phone          string             `json:"phone"`
 	SpecialRequest string             `json:"specialRequest"`
 	FromDate       string             `json:"fromDate"`
@@ -100,6 +101,7 @@ func (h *RoomHandler) HandleBookRoom(c *fiber.Ctx) error {
 	// Find an available room by hotel and room name
 	roomIDPtr, err := h.getAvailableRoom(c.Context(), hotelID, params.RoomName, fromDate, tillDate)
 	if err != nil {
+		fmt.Println("error:", err)
 		return NewError(http.StatusBadRequest, err.Error())
 	}
 	roomID := *roomIDPtr
@@ -129,7 +131,9 @@ func (h *RoomHandler) HandleBookRoom(c *fiber.Ctx) error {
 
 	// Calculate price: number of nights * room.Price (assumed USD) converted to cents.
 	numNights := int(tillDate.Sub(fromDate).Hours() / 24)
-	totalAmount := room.Price * float64(numNights) * 100
+	taxesAndFees := 13.08
+
+	totalAmount := (room.Price + taxesAndFees) * float64(numNights) * 100
 
 	status, err := h.store.Booking.IsBooked(c.Context(), roomID.Hex(), fromDate.Format("2006-01-02"), tillDate.Format("2006-01-02"))
 	if err != nil {
@@ -144,6 +148,11 @@ func (h *RoomHandler) HandleBookRoom(c *fiber.Ctx) error {
 	booking := &types.Booking{
 		UserID:     user.ID,
 		RoomID:     roomID,
+		FirstName:  params.FirstName,
+		LastName:   params.LastName,
+		Email:      params.Email,
+		Phone:      params.Phone,
+		SpecialReq: params.SpecialRequest,
 		NumPersons: params.NumPersons,
 		FromDate:   fromDate,
 		TillDate:   tillDate,
@@ -153,7 +162,9 @@ func (h *RoomHandler) HandleBookRoom(c *fiber.Ctx) error {
 		UpdatedAt:  time.Now(),
 		Hotel:      *hotel,
 		Room:       *room,
+		TotalPrice: totalAmount,
 	}
+	booking.Hotel.Rooms = nil
 
 	_, err = h.store.Booking.InsertBooking(c.Context(), booking)
 	if err != nil {
@@ -238,12 +249,12 @@ func (h *RoomHandler) getAvailableRoom(ctx context.Context, hotelID primitive.Ob
 			},
 		}
 
-		bookings, err := h.store.Booking.GetBookings(ctx, where)
+		exists, err := h.store.Booking.Exists(ctx, where)
 		if err != nil {
-			return nil, err
+			return nil, err // Return any DB error
 		}
-		if len(bookings) == 0 {
-			return &room.ID, nil
+		if !exists {
+			return &room.ID, nil // Room is available
 		}
 	}
 	return nil, errors.New("no available rooms for the given date range in this hotel")
