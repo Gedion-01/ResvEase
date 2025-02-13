@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/vue-query";
+import { useInfiniteQuery, useQuery } from "@tanstack/vue-query";
 import {
   getBooking,
   getHotel,
@@ -11,6 +11,16 @@ export function useHotel(hotelId: string) {
   return useQuery({
     queryKey: ["hotel", hotelId],
     queryFn: () => getHotel(hotelId),
+  });
+}
+
+export function useInfiniteHotels(queryParams: Record<string, any>) {
+  return useInfiniteQuery({
+    queryKey: ["infinite-hotels", queryParams],
+    queryFn: ({ pageParam = 1 }) =>
+      getHotels({ ...queryParams, page: pageParam }),
+    getNextPageParam: (lastPage) => lastPage.cursor,
+    initialPageParam: 1,
   });
 }
 
