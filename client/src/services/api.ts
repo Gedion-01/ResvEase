@@ -46,9 +46,14 @@ export const getHotels = async (queryParams: Record<string, any>) => {
     const queryString = new URLSearchParams(queryParams).toString();
     console.log(queryString, queryParams);
     const response = await apiClient.get<HotelResponse>(
-      `/hotel?page=1&limit=10&${queryString}`
+      `/hotel?${queryString}`
     );
-    return response.data;
+    // return response.data;
+    const { data, results, page } = response.data;
+    return {
+      pageData: data || [],
+      cursor: results > 0 ? page + 1 : undefined,
+    };
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.status === 404) {
       console.error("Hotel resource not found:", error.response.data);
