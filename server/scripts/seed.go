@@ -46,9 +46,4 @@ func main() {
 
 	GenerateSpecificHotelsAndRooms(store, user)
 
-	// for i := 0; i < 100; i++ {
-	// 	name := fmt.Sprintf("hotel name %d", i)
-	// 	location := fmt.Sprintf("location %d", i)
-	// 	fixtures.AddHotel(store, name, location, rand.Intn(5)+1, nil)
-	// }
 }

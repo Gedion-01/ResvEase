@@ -36,7 +36,7 @@ const router = createRouter({
       path: "/auth",
       name: "Auth",
       component: AuthView,
-      meta: { requiresGuest: true },
+      meta: { requiresGuest: true, hideNavbar: true },
     },
     {
       path: "/bookings",

@@ -39,14 +39,6 @@ func (h *BookingHandler) HandleCancelBooking(c *fiber.Ctx) error {
 	return c.JSON(genericResp{Type: "msg", Msg: "updated"})
 }
 
-// func (h *BookingHandler) HandleGetBookings(c *fiber.Ctx) error {
-// 	bookings, err := h.store.Booking.GetBookings(c.Context(), bson.M{})
-// 	if err != nil {
-// 		return ErrResourceNotFound("bookings")
-// 	}
-// 	return c.JSON(bookings)
-// }
-
 type UserBookingsParam struct {
 	db.Pagination
 }

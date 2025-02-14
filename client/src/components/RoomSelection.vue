@@ -81,10 +81,6 @@ const queryParams = reactive({
   limit: "1",
 });
 
-// const { data, isLoading, isFetching, refetch } = useRooms(
-//   props.hotel.id,
-//   queryParams
-// );
 const { data, fetchNextPage, hasNextPage, isLoading, isFetching, refetch } =
   useInfiniteRooms(props.hotel.id, queryParams);
 
@@ -189,13 +185,11 @@ const updateQueryParams = () => {
   const query = { ...route.query };
 
   if (activeFilters.value.includes("price-range")) {
-    // Use the initial filter price range
     queryParams.minPrice = initialFilters.priceRange.minPrice.toString();
     queryParams.maxPrice = initialFilters.priceRange.maxPrice.toString();
     query.minPrice = initialFilters.priceRange.minPrice.toString();
     query.maxPrice = initialFilters.priceRange.maxPrice.toString();
   } else {
-    // Reset to the global store's price range
     filterStore.rest();
     const [storeMin, storeMax] = filterStore.priceRange;
     queryParams.minPrice = storeMin.toString();
@@ -204,7 +198,6 @@ const updateQueryParams = () => {
     query.maxPrice = storeMax.toString();
   }
 
-  // Update amenities in queryParams
   const amenities = activeFilters.value.filter((filter) =>
     [
       "breakfast",
@@ -281,8 +274,6 @@ const calculateFilterCounts = () => {
     if (room.amenities.includes("Free Cancellation")) counts["cancellation"]++;
     if (room.bedType === "1 Double Bed") counts["double-bed"]++;
     if (room.bedType === "2 Beds") counts["two-beds"]++;
-    // if (room.paymentOption === "Prepay Online") counts["prepay"]++;
-    // if (room.confirmationType === "Instant Confirmation") counts["instant"]++;
   });
 
   filters.value.forEach((filter) => {

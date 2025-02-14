@@ -44,15 +44,12 @@ func (s *MongoRoomStore) GetRooms(
 	page, limit int,
 ) ([]*types.GroupedRoom, error) {
 	pipeline := []bson.M{
-		// Step 1: Filter rooms by hotelID
 		{
 			"$match": bson.M{"hotelID": hotelFilters["hotelID"]},
 		},
-		// Step 2: Apply room filters (e.g., price, capacity)
 		{
 			"$match": roomFilters,
 		},
-		// Step 3: Look up bookings for each room
 		{
 			"$lookup": bson.M{
 				"from":         "bookings",
@@ -61,7 +58,6 @@ func (s *MongoRoomStore) GetRooms(
 				"as":           "bookings",
 			},
 		},
-		// Step 4: Check for overlapping bookings (INCLUSIVE comparison)
 		{
 			"$addFields": bson.M{
 				"isBooked": bson.M{
@@ -74,7 +70,6 @@ func (s *MongoRoomStore) GetRooms(
 									"cond": bson.M{
 										"$and": []bson.M{
 											{"$eq": []interface{}{"$$booking.canceled", false}},
-											// Overlap condition: booking.fromDate <= tillDate AND booking.tillDate >= fromDate
 											{"$lte": []interface{}{"$$booking.fromDate", tillDate}},
 											{"$gte": []interface{}{"$$booking.tillDate", fromDate}},
 										},
@@ -87,7 +82,6 @@ func (s *MongoRoomStore) GetRooms(
 				},
 			},
 		},
-		// Step 5: Group by room name and hotelID
 		{
 			"$group": bson.M{
 				"_id": bson.M{
@@ -107,7 +101,6 @@ func (s *MongoRoomStore) GetRooms(
 				"bookedCount": bson.M{"$sum": bson.M{"$cond": []interface{}{"$isBooked", 1, 0}}},
 			},
 		},
-		// Step 6: Calculate availableCount
 		{
 			"$addFields": bson.M{
 				"availableCount": bson.M{
@@ -115,14 +108,12 @@ func (s *MongoRoomStore) GetRooms(
 				},
 			},
 		},
-		// Step 7: Pagination
 		{
 			"$skip": (page - 1) * limit,
 		},
 		{
 			"$limit": limit,
 		},
-		// Step 8: Final projection
 		{
 			"$project": bson.M{
 				"_id":            0,
@@ -185,7 +176,6 @@ func (s *MongoRoomStore) InsertRoom(ctx context.Context, room *types.Room) (*typ
 	}
 	room.ID = resp.InsertedID.(primitive.ObjectID)
 
-	// update the hotel with this id
 	filter := Map{"_id": room.HotelID}
 	update := Map{"$push": bson.M{"rooms": room.ID}}
 
@@ -202,15 +192,12 @@ func (s *MongoRoomStore) CountRooms(
 	fromDate, tillDate *time.Time,
 ) (int64, error) {
 	pipeline := []bson.M{
-		// Step 1: Filter rooms by hotelID
 		{
 			"$match": bson.M{"hotelID": hotelFilters["hotelID"]},
 		},
-		// Step 2: Apply room filters (e.g., price, capacity)
 		{
 			"$match": roomFilters,
 		},
-		// Step 3: Look up bookings for each room
 		{
 			"$lookup": bson.M{
 				"from":         "bookings",
@@ -219,7 +206,6 @@ func (s *MongoRoomStore) CountRooms(
 				"as":           "bookings",
 			},
 		},
-		// Step 4: Check for overlapping bookings
 		{
 			"$addFields": bson.M{
 				"isBooked": bson.M{
@@ -232,7 +218,6 @@ func (s *MongoRoomStore) CountRooms(
 									"cond": bson.M{
 										"$and": []bson.M{
 											{"$eq": []interface{}{"$$booking.canceled", false}},
-											// Overlap condition: booking.fromDate <= tillDate AND booking.tillDate >= fromDate
 											{"$lte": []interface{}{"$$booking.fromDate", tillDate}},
 											{"$gte": []interface{}{"$$booking.tillDate", fromDate}},
 										},
@@ -245,7 +230,6 @@ func (s *MongoRoomStore) CountRooms(
 				},
 			},
 		},
-		// Step 5: Group by room name and hotelID
 		{
 			"$group": bson.M{
 				"_id": bson.M{
@@ -265,7 +249,6 @@ func (s *MongoRoomStore) CountRooms(
 				"bookedCount": bson.M{"$sum": bson.M{"$cond": []interface{}{"$isBooked", 1, 0}}},
 			},
 		},
-		// Step 6: Count documents
 		{
 			"$count": "totalRooms",
 		},

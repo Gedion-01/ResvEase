@@ -42,7 +42,6 @@ export const useAuthStore = defineStore("auth", () => {
   }) => {
     try {
       const response = await apiClient.post("/signup", credential);
-      // router.push(redirectUrl.value || "/auth?tab=login");
     } catch (error) {
       console.error("An error occurred while signing up:", error);
       throw error;

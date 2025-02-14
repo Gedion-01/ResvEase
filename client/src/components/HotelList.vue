@@ -5,7 +5,7 @@ import HotelCard from "./HotelCard.vue";
 import { useRoute, useRouter } from "vue-router";
 import { useSearchStore } from "@/store/searchStore";
 import { useFilterStore } from "@/store/filterStore";
-import { watch, ref, reactive, onMounted, computed } from "vue";
+import { watch, reactive, computed } from "vue";
 import HotelCardSkeleton from "./animations/HotelCardSkeleton.vue";
 import { Button } from "@/components/ui/button";
 

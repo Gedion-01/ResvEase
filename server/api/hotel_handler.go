@@ -121,7 +121,6 @@ func (h *HotelHandler) HandleGetRooms(c *fiber.Ctx) error {
 		})
 	}
 
-	// Build hotel filters
 	hotelFilters := bson.M{"hotelID": oid}
 	if params.HotelRating != "" {
 		rating, err := strconv.Atoi(params.HotelRating)
@@ -137,7 +136,6 @@ func (h *HotelHandler) HandleGetRooms(c *fiber.Ctx) error {
 		hotelFilters["hotel.amenities"] = bson.M{"$all": strings.Split(params.HotelAmenities, ",")}
 	}
 
-	// Build room filters
 	roomFilters := bson.M{}
 	if params.RoomCapacity != "" {
 		capacity, err := strconv.Atoi(params.RoomCapacity)

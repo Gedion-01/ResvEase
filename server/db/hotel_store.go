@@ -70,7 +70,6 @@ func (s *MongoHotelStore) GetHotels(ctx context.Context, filter Map, page *Pagin
 		}},
 	}
 
-	// Add price range filter if minPrice or maxPrice is specified
 	if minPrice > 0 || maxPrice > 0 {
 		priceRangeFilter := bson.M{}
 		if minPrice > 0 {
@@ -95,7 +94,6 @@ func (s *MongoHotelStore) GetHotels(ctx context.Context, filter Map, page *Pagin
 		})
 	}
 
-	// Add a stage to exclude hotels with empty prices
 	pipeline = append(pipeline, bson.M{
 		"$match": bson.M{
 			"prices": bson.M{"$ne": []interface{}{}},
@@ -105,7 +103,6 @@ func (s *MongoHotelStore) GetHotels(ctx context.Context, filter Map, page *Pagin
 	pipeline = append(pipeline, []bson.M{
 		{"$project": bson.M{
 			"rooms": 0,
-			// "prices": 0,
 		}},
 		{"$skip": (page.Page - 1) * page.Limit},
 		{"$limit": page.Limit},
