@@ -3,6 +3,7 @@ import { useAuthStore } from "./store/authStore";
 import { computed, onMounted } from "vue";
 import { RouterView, useRoute } from "vue-router";
 import Navbar from "@/components/Navbar.vue";
+import Toaster from "@/components/ui/toast/Toaster.vue";
 
 const authStore = useAuthStore();
 
@@ -16,4 +17,5 @@ const hideNavbar = computed(() => route.meta.hideNavbar === true);
 <template>
   <Navbar v-if="!hideNavbar" />
   <RouterView />
+  <Toaster />
 </template>
