@@ -1,11 +1,11 @@
 <script setup lang="ts">
-import { useHotels, useInfiniteHotels } from "@/services/queries";
+import { useInfiniteHotels } from "@/services/queries";
 
 import HotelCard from "./HotelCard.vue";
 import { useRoute, useRouter } from "vue-router";
 import { useSearchStore } from "@/store/searchStore";
 import { useFilterStore } from "@/store/filterStore";
-import { watch, ref, reactive, onMounted } from "vue";
+import { watch, ref, reactive, onMounted, computed } from "vue";
 import HotelCardSkeleton from "./animations/HotelCardSkeleton.vue";
 import { Button } from "@/components/ui/button";
 
@@ -73,9 +73,6 @@ const {
   refetch,
 } = useInfiniteHotels(queryParams);
 
-// const { isLoading, isFetching, data, isError, refetch } =
-//   useHotels(queryParams);
-
 const handleUpdateFilter = (query: any) => {
   queryParams.location = query.location;
   queryParams.checkIn = query.checkIn;
@@ -100,6 +97,11 @@ watch(
 const nextpage = () => {
   fetchNextPage();
 };
+
+const hotels = computed(() => {
+  if (!data.value) return [];
+  return data.value.pages.flatMap((page) => page.pageData);
+});
 </script>
 <template>
   <div>
@@ -112,13 +114,7 @@ const nextpage = () => {
     <div v-else-if="isError">Error loading hotels</div>
     <div v-else>
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div v-for="(page, index) in data?.pages" :key="index">
-          <HotelCard
-            v-for="item in page.pageData"
-            :key="item.id"
-            :hotel="item"
-          />
-        </div>
+        <HotelCard v-for="item in hotels" :key="item?.id" :hotel="item!" />
       </div>
     </div>
     <div class="flex items-center justify-center mt-6">
@@ -126,7 +122,7 @@ const nextpage = () => {
         :v-if="hasNextPage"
         :disabled="isFetching || !hasNextPage"
         @click="nextpage"
-        >{{ isFetching ? "Loading" : "Load More Data" }}</Button
+        >{{ isFetching ? "Loading" : "View more" }}</Button
       >
     </div>
   </div>
