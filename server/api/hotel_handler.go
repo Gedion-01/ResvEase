@@ -2,6 +2,7 @@ package api
 
 import (
 	"hotel-reservation/db"
+	"math"
 	"net/http"
 	"strconv"
 	"strings"
@@ -179,14 +180,23 @@ func (h *HotelHandler) HandleGetRooms(c *fiber.Ctx) error {
 		}
 	}
 
+	roomCount, err := h.store.Room.CountRooms(c.Context(), hotelFilters, roomFilters, &fromDate, &tillDate)
+
+	if err != nil {
+		return ErrResourceNotFound("room")
+	}
+
+	totalPages := int(math.Ceil(float64(roomCount) / float64(params.Limit)))
+
 	rooms, err := h.store.Room.GetRooms(c.Context(), hotelFilters, roomFilters, &fromDate, &tillDate, page, limit)
 	if err != nil {
 		return err
 	}
 	resp := ResourceResp{
-		Data:    rooms,
-		Results: len(rooms),
-		Page:    int(page),
+		Data:      rooms,
+		Results:   len(rooms),
+		Page:      int(page),
+		TotalPage: totalPages,
 	}
 	return c.JSON(resp)
 }
@@ -201,9 +211,10 @@ func (h *HotelHandler) HandleGetHotel(c *fiber.Ctx) error {
 }
 
 type ResourceResp struct {
-	Results int `json:"results"`
-	Data    any `json:"data"`
-	Page    int `json:"page"`
+	Results   int `json:"results"`
+	Data      any `json:"data"`
+	Page      int `json:"page"`
+	TotalPage int `json:"totalPage"`
 }
 
 type HotelQueryParams struct {
@@ -236,15 +247,23 @@ func (h *HotelHandler) HandleGetHotels(c *fiber.Ctx) error {
 		filter["location"] = bson.M{"$regex": primitive.Regex{Pattern: params.Location, Options: "i"}}
 	}
 
+	hotelCount, err := h.store.Hotel.CountHotels(c.Context(), filter)
+	if err != nil {
+		return ErrResourceNotFound("hotel")
+	}
+
+	totalPages := int(math.Ceil(float64(hotelCount) / float64(params.Limit)))
+
 	hotels, err := h.store.Hotel.GetHotels(c.Context(), filter, &params.Pagination, params.MinPrice, params.MaxPrice)
 
 	if err != nil {
 		return ErrResourceNotFound("hotel")
 	}
 	resp := ResourceResp{
-		Data:    hotels,
-		Results: len(hotels),
-		Page:    int(params.Page),
+		Data:      hotels,
+		Results:   len(hotels),
+		Page:      int(params.Page),
+		TotalPage: totalPages,
 	}
 	return c.JSON(resp)
 }
