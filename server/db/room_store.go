@@ -16,6 +16,7 @@ type RoomStore interface {
 	GetRoomByID(context.Context, primitive.ObjectID) (*types.Room, error)
 	GetRoomsSearch(context.Context, bson.M) ([]*types.Room, error)
 	GetRooms(ctx context.Context, hotelFilters, roomFilters bson.M, fromDate, tillDate *time.Time, page, limit int) ([]*types.GroupedRoom, error)
+	CountRooms(ctx context.Context, hotelFilters, roomFilters bson.M, fromDate, tillDate *time.Time) (int64, error)
 }
 
 type MongoRoomStore struct {
@@ -193,4 +194,99 @@ func (s *MongoRoomStore) InsertRoom(ctx context.Context, room *types.Room) (*typ
 	}
 
 	return room, nil
+}
+
+func (s *MongoRoomStore) CountRooms(
+	ctx context.Context,
+	hotelFilters, roomFilters bson.M,
+	fromDate, tillDate *time.Time,
+) (int64, error) {
+	pipeline := []bson.M{
+		// Step 1: Filter rooms by hotelID
+		{
+			"$match": bson.M{"hotelID": hotelFilters["hotelID"]},
+		},
+		// Step 2: Apply room filters (e.g., price, capacity)
+		{
+			"$match": roomFilters,
+		},
+		// Step 3: Look up bookings for each room
+		{
+			"$lookup": bson.M{
+				"from":         "bookings",
+				"localField":   "_id",
+				"foreignField": "roomID",
+				"as":           "bookings",
+			},
+		},
+		// Step 4: Check for overlapping bookings
+		{
+			"$addFields": bson.M{
+				"isBooked": bson.M{
+					"$gt": []interface{}{
+						bson.M{
+							"$size": bson.M{
+								"$filter": bson.M{
+									"input": "$bookings",
+									"as":    "booking",
+									"cond": bson.M{
+										"$and": []bson.M{
+											{"$eq": []interface{}{"$$booking.canceled", false}},
+											// Overlap condition: booking.fromDate <= tillDate AND booking.tillDate >= fromDate
+											{"$lte": []interface{}{"$$booking.fromDate", tillDate}},
+											{"$gte": []interface{}{"$$booking.tillDate", fromDate}},
+										},
+									},
+								},
+							},
+						},
+						0,
+					},
+				},
+			},
+		},
+		// Step 5: Group by room name and hotelID
+		{
+			"$group": bson.M{
+				"_id": bson.M{
+					"hotelID": "$hotelID",
+					"name":    "$name",
+				},
+				"id":          bson.M{"$first": "$_id"},
+				"name":        bson.M{"$first": "$name"},
+				"description": bson.M{"$first": "$description"},
+				"price":       bson.M{"$first": "$price"},
+				"capacity":    bson.M{"$first": "$capacity"},
+				"amenities":   bson.M{"$first": "$amenities"},
+				"images":      bson.M{"$first": "$images"},
+				"bedType":     bson.M{"$first": "$bedType"},
+				"bedrooms":    bson.M{"$first": "$bedrooms"},
+				"totalCount":  bson.M{"$sum": 1}, // Total rooms of this type
+				"bookedCount": bson.M{"$sum": bson.M{"$cond": []interface{}{"$isBooked", 1, 0}}},
+			},
+		},
+		// Step 6: Count documents
+		{
+			"$count": "totalRooms",
+		},
+	}
+
+	cursor, err := s.coll.Aggregate(ctx, pipeline)
+	if err != nil {
+		return 0, err
+	}
+	defer cursor.Close(ctx)
+
+	var result struct {
+		TotalRooms int64 `bson:"totalRooms"`
+	}
+
+	if cursor.Next(ctx) {
+		if err := cursor.Decode(&result); err != nil {
+			return 0, err
+		}
+		return result.TotalRooms, nil
+	}
+
+	return 0, nil
 }

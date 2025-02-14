@@ -38,6 +38,19 @@ export function useRooms(hotelId: string, queryParams: Record<string, any>) {
   });
 }
 
+export function useInfiniteRooms(
+  hotelId: string,
+  queryParams: Record<string, any>
+) {
+  return useInfiniteQuery({
+    queryKey: ["infinite-rooms", queryParams],
+    queryFn: ({ pageParam = 1 }) =>
+      getRooms(hotelId, { ...queryParams, page: pageParam }),
+    getNextPageParam: (lastPage) => lastPage.cursor,
+    initialPageParam: 1,
+  });
+}
+
 export function useUserBookings(userID: string) {
   return useQuery({
     queryKey: ["bookings"],

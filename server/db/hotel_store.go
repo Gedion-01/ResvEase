@@ -16,6 +16,7 @@ type HotelStore interface {
 	Update(context.Context, Map, Map) error
 	GetHotels(context.Context, Map, *Pagination, float64, float64) ([]*types.Hotel, error)
 	GetHotelByID(context.Context, string) (*types.Hotel, error)
+	CountHotels(context.Context, Map) (int64, error)
 }
 
 type MongoHotelStore struct {
@@ -141,4 +142,8 @@ func (s *MongoHotelStore) InsertHotel(ctx context.Context, hotel *types.Hotel) (
 	}
 	hotel.ID = resp.InsertedID.(primitive.ObjectID)
 	return hotel, nil
+}
+
+func (s *MongoHotelStore) CountHotels(ctx context.Context, filter Map) (int64, error) {
+	return s.coll.CountDocuments(ctx, filter)
 }

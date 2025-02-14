@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, defineProps, reactive, watch } from "vue";
+import { ref, defineProps, reactive, watch, computed } from "vue";
 import { useFilterStore } from "@/store/filterStore";
 import { useRoomBookingStore } from "@/store/bookingStore";
 import { useAuthStore } from "@/store/authStore";
@@ -41,7 +41,7 @@ import {
   ShowerHead,
 } from "lucide-vue-next";
 
-import { useRooms } from "@/services/queries";
+import { useInfiniteRooms, useRooms } from "@/services/queries";
 import { useRoute, useRouter } from "vue-router";
 import type { Hotel, Room } from "@/types/hotel";
 import RoomSelectionSkeleton from "./animations/RoomSelectionSkeleton.vue";
@@ -77,13 +77,16 @@ const queryParams = reactive({
   roomAmenities: route.query.roomAmenities
     ? (route.query.roomAmenities as string).split(",")
     : [],
+  page: "1",
+  limit: "1",
 });
 
-const { data, isLoading, isFetching, refetch } = useRooms(
-  props.hotel.id,
-  queryParams
-);
-console.log(data);
+// const { data, isLoading, isFetching, refetch } = useRooms(
+//   props.hotel.id,
+//   queryParams
+// );
+const { data, fetchNextPage, hasNextPage, isLoading, isFetching, refetch } =
+  useInfiniteRooms(props.hotel.id, queryParams);
 
 const loginPromptDialogRef = ref();
 
@@ -248,6 +251,15 @@ watch(
   { deep: true }
 );
 
+const rooms = computed(() => {
+  if (!data.value) return [];
+  return data.value.pages.flatMap((page) => page.pageData);
+});
+
+const nextpage = () => {
+  fetchNextPage();
+};
+
 const calculateFilterCounts = () => {
   const counts = {
     "price-range": 0,
@@ -259,7 +271,7 @@ const calculateFilterCounts = () => {
     instant: 0,
   };
 
-  data.value?.data.forEach((room) => {
+  rooms.value.forEach((room) => {
     if (
       room.price >= parseFloat(queryParams.minPrice) &&
       room.price <= parseFloat(queryParams.maxPrice)
@@ -328,15 +340,12 @@ const reserveRoom = (room: Room) => {
         <RoomSelectionSkeleton v-for="index in 9" :key="index" />
       </div>
     </div>
-    <div
-      v-else-if="!data?.data || data.data.length === 0"
-      class="text-center text-gray-500"
-    >
+    <div v-else-if="rooms.length === 0" class="text-center text-gray-500">
       No rooms available.
     </div>
     <div v-else className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
       <Card
-        v-for="room in data?.data"
+        v-for="room in rooms"
         :key="room.id"
         :class="[
           'cursor-pointer transition-colors',
@@ -465,6 +474,15 @@ const reserveRoom = (room: Room) => {
           </div>
         </CardContent>
       </Card>
+    </div>
+
+    <div class="flex items-center justify-center mt-6">
+      <Button
+        :v-if="hasNextPage"
+        :disabled="isFetching || !hasNextPage"
+        @click="nextpage"
+        >{{ isFetching ? "Loading" : "View more" }}</Button
+      >
     </div>
   </div>
   <LoginPromptDialog ref="loginPromptDialogRef" />
