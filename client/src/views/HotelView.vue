@@ -7,14 +7,12 @@ import { useHotel } from "@/services/queries";
 import { onMounted, onUnmounted, ref } from "vue";
 import { useRoute } from "vue-router";
 
-// Define the type for the route parameters
 interface RouteParams {
-  id: string; // Example: if the route is '/items/:id'
+  id: string;
 }
 
 const route = useRoute();
 
-// Access the parameter and cast it to the type
 const id = route.params.id as RouteParams["id"];
 
 const searchSection = ref<HTMLElement | null>(null);

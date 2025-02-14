@@ -19,14 +19,12 @@ var config = fiber.Config{
 }
 
 func main() {
-	// listenAddr := flag.String("listenAddr", ":5000", "The listen address of the api server")
 	mongoEndPoint := os.Getenv("MONGO_DB_URL")
 	client, err := mongo.Connect(context.TODO(), options.Client().
 		ApplyURI(mongoEndPoint))
 	if err != nil {
 		log.Fatal(err)
 	}
-	// handle initialization
 	var (
 		hotelStore   = db.NewMongoHotelStore(client)
 		bookingStore = db.NewMongoBookingStore(client)

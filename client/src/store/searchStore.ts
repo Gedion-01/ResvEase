@@ -28,7 +28,6 @@ export const useSearchStore = defineStore("search", {
       const params = localStorage.getItem("searchParams");
       if (params) {
         const parsedParams = JSON.parse(params);
-        // Parse stored checkIn/checkOut dates using parseISO for reliable comparison
         const storedCheckIn = parsedParams.checkIn
           ? parseISO(parsedParams.checkIn)
           : null;
@@ -38,7 +37,6 @@ export const useSearchStore = defineStore("search", {
           : null;
         const today = startOfDay(new Date());
 
-        // If the stored check-in is before today's start, clear dates.
         if (storedCheckIn && isBefore(storedCheckIn, today)) {
           this.checkIn = format(today, "yyyy-MM-dd");
           this.checkOut = format(addDays(today, 1), "yyyy-MM-dd");

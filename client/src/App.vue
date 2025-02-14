@@ -1,19 +1,19 @@
 <script setup lang="ts">
 import { useAuthStore } from "./store/authStore";
-import { onMounted } from "vue";
-import { RouterView } from "vue-router";
+import { computed, onMounted } from "vue";
+import { RouterView, useRoute } from "vue-router";
 import Navbar from "@/components/Navbar.vue";
-import TestVIew from "./views/TestVIew.vue";
 
 const authStore = useAuthStore();
 
 onMounted(() => {
   authStore.initializeTokenCheck();
 });
+const route = useRoute();
+const hideNavbar = computed(() => route.meta.hideNavbar === true);
 </script>
 
 <template>
-  <Navbar />
+  <Navbar v-if="!hideNavbar" />
   <RouterView />
-  <!-- <TestVIew /> -->
 </template>

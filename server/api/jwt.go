@@ -21,7 +21,6 @@ func JWTAuthentication(userStore db.UserStore) fiber.Handler {
 			return ErrUnAuthorized()
 		}
 
-		// Extract the token from the "Bearer <token>" format
 		token := strings.TrimPrefix(authHeader, "Bearer ")
 
 		claims, err := validateToken(token)
@@ -30,7 +29,6 @@ func JWTAuthentication(userStore db.UserStore) fiber.Handler {
 		}
 		expiresFloat := claims["expires"].(float64)
 		expires := int64(expiresFloat)
-		// check token expiration
 		if time.Now().Unix() > expires {
 			return NewError(http.StatusUnauthorized, "token expired")
 		}
@@ -39,7 +37,6 @@ func JWTAuthentication(userStore db.UserStore) fiber.Handler {
 		if err != nil {
 			return ErrUnAuthorized()
 		}
-		// Set the current authenticated user to the context
 		c.Context().SetUserValue("user", user)
 
 		return c.Next()
@@ -48,7 +45,6 @@ func JWTAuthentication(userStore db.UserStore) fiber.Handler {
 
 func validateToken(tokenStr string) (jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenStr, func(token *jwt.Token) (interface{}, error) {
-		// Don't forget to validate the alg is what you expect:
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			fmt.Println("invalid signing method", token.Header["alg"])
 			return nil, ErrUnAuthorized()

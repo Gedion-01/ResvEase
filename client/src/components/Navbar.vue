@@ -2,14 +2,36 @@
 import { RouterLink } from "vue-router";
 import { LogOut, Moon, Sun, User } from "lucide-vue-next";
 import { useAuthStore } from "@/store/authStore";
+import { useSearchStore } from "@/store/searchStore";
+import { useFilterStore } from "@/store/filterStore";
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Button } from "@/components/ui/button";
+import { computed, reactive } from "vue";
 
 const authStore = useAuthStore();
+const searchStore = useSearchStore();
+const filterStore = useFilterStore();
+
+searchStore.loadSearchParams();
+filterStore.loadFilterParams();
+
+const queryParams = reactive({
+  location: searchStore.location,
+  checkIn: searchStore.checkIn,
+  checkOut: searchStore.checkOut,
+  adults: searchStore.adults.toString(),
+  children: searchStore.children.toString(),
+  minPrice: filterStore.priceRange[0].toString(),
+  maxPrice: filterStore.priceRange[1].toString(),
+  rating: filterStore.starRating.toString(),
+  amenities: filterStore.selectedAmenities.join(","),
+});
+
+const queryString = computed(() => new URLSearchParams(queryParams).toString());
 
 const handleLogout = () => {
   authStore.logout();
@@ -26,12 +48,14 @@ const handleLogout = () => {
             <span class="hidden font-bold sm:inline-block">BookMyStay</span>
           </RouterLink>
           <nav class="flex items-center space-x-6 text-sm font-medium">
-            <RouterLink to="/search">Search</RouterLink>
+            <RouterLink :to="`/search?${queryString}`">Search</RouterLink>
             <RouterLink to="/deals">Deals</RouterLink>
             <RouterLink v-if="authStore.isAuthenticated === true" to="/bookings"
               >My Bookings</RouterLink
             >
-            <RouterLink to="/account">My Account</RouterLink>
+            <RouterLink v-if="!authStore.isAuthenticated" to="/auth"
+              >Sign in</RouterLink
+            >
           </nav>
         </div>
         <div

@@ -148,7 +148,6 @@ const secondaryActionText = computed(() => {
 });
 
 const primaryAction = () => {
-  // Implement primary action logic here
   switch (props.errorType) {
     case "room is booked, please choose another room":
       router.go(-1);
@@ -162,7 +161,6 @@ const primaryAction = () => {
 };
 
 const secondaryAction = () => {
-  // Implement secondary action logic here
   console.log(`Secondary action for ${props.errorType}`);
   closeDialog();
 };
