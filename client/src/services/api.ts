@@ -48,11 +48,11 @@ export const getHotels = async (queryParams: Record<string, any>) => {
     const response = await apiClient.get<HotelResponse>(
       `/hotel?${queryString}`
     );
-    // return response.data;
-    const { data, results, page } = response.data;
+
+    const { data, results, page, totalPage } = response.data;
     return {
       pageData: data || [],
-      cursor: results > 0 ? page + 1 : undefined,
+      cursor: page < totalPage ? page + 1 : undefined,
     };
   } catch (error) {
     if (axios.isAxiosError(error) && error.response?.status === 404) {
@@ -74,9 +74,12 @@ export const getRooms = async (
   const response = await apiClient.get<RoomResponse>(
     `/hotel/${hotelId}/rooms?${queryString}`
   );
-  return response.data;
+  const { data, page, totalPage } = response.data;
+  return {
+    pageData: data || [],
+    cursor: page < totalPage ? page + 1 : undefined,
+  };
 };
-// `/hotel/${hotelId}/rooms?checkIn=2025-01-01&checkOut=2025-01-05&page=1&limit=10&hotelRating=4.8&RoomCapacity=2`;
 
 interface BookingData {
   hotelID: string;
