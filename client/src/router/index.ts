@@ -7,6 +7,8 @@ import AuthView from "@/views/AuthView.vue";
 import BookingsView from "@/views/BookingsView.vue";
 import BookingDetailsView from "@/views/BookingDetailsView.vue";
 import { useAuthStore } from "@/store/authStore";
+import BookingCancelView from "@/views/BookingCancelView.vue";
+import BookingSuccessView from "@/views/BookingSuccessView.vue";
 
 const router = createRouter({
   history: createWebHistory(),
@@ -48,6 +50,18 @@ const router = createRouter({
       path: "/booking-details/:id",
       name: "BookingDetails",
       component: BookingDetailsView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: "/booking-cancel",
+      name: "BookingCancel",
+      component: BookingCancelView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: "/booking-success",
+      name: "BookingSuccess",
+      component: BookingSuccessView,
       meta: { requiresAuth: true },
     },
   ],
