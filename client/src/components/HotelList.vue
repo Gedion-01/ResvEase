@@ -9,6 +9,7 @@ import { watch, reactive, computed } from "vue";
 import HotelCardSkeleton from "./animations/HotelCardSkeleton.vue";
 import { Button } from "@/components/ui/button";
 import NoHotelsFound from "./404/NoHotelsFound.vue";
+import ErrorDisplay from "./Error/ErrorDisplay.vue";
 
 interface QueryParams {
   location: string;
@@ -141,7 +142,9 @@ const hotels = computed(() => {
       <HotelCardSkeleton v-if="limit" v-for="index in 4" :key="index + limit" />
       <HotelCardSkeleton v-else v-for="index in 12" :key="index" />
     </div>
-    <div v-else-if="isError">Error loading hotels</div>
+    <div v-else-if="isError">
+      <ErrorDisplay error-type="generic" />
+    </div>
     <div v-else-if="hotels.length === 0">
       <NoHotelsFound />
     </div>
