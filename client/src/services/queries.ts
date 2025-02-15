@@ -16,7 +16,7 @@ export function useHotel(hotelId: string) {
 
 export function useInfiniteHotels(queryParams: Record<string, any>) {
   return useInfiniteQuery({
-    queryKey: ["infinite-hotels", queryParams],
+    queryKey: ["infinite-hotels"],
     queryFn: ({ pageParam = 1 }) =>
       getHotels({ ...queryParams, page: pageParam }),
     getNextPageParam: (lastPage) => lastPage.cursor,

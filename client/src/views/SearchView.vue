@@ -26,7 +26,7 @@ const viewMode = ref<"list" | "map">("list");
 </script>
 
 <template>
-  <section class="min-h-screen bg-background flex flex-col">
+  <section class="min-h-screen bg-slate-100 flex flex-col">
     <div :class="['py-1 flex-grow']">
       <div
         ref="searchSection"

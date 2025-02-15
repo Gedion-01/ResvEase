@@ -78,7 +78,7 @@ const queryParams = reactive({
     ? (route.query.roomAmenities as string).split(",")
     : [],
   page: "1",
-  limit: "1",
+  limit: "6",
 });
 
 const { data, fetchNextPage, hasNextPage, isLoading, isFetching, refetch } =
