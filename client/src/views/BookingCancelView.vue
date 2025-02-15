@@ -21,7 +21,7 @@ const retryPayment = () => {
 };
 
 const modifyBooking = () => {
-  console.log("Modifying booking...");
+  router.push("/booking");
 };
 </script>
 

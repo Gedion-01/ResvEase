@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { nextTick, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { useFilterStore } from "@/store/filterStore";
 import { Slider } from "@/components/ui/slider";
@@ -37,14 +37,22 @@ const router = useRouter();
 const route = useRoute();
 
 const executeFilter = () => {
-  const query = {
+  const query: Record<string, string> = {
     ...route.query,
     minPrice: priceRange.value[0].toString(),
     maxPrice: priceRange.value[1].toString(),
     rating: starRating.value.toString(),
-    amenities: selectedAmenities.value.join(","),
+    // amenities: selectedAmenities.value.join(","),
   };
-  router.replace({ name: "SearchResults", query });
+  if (selectedAmenities.value.length > 0) {
+    query.amenities = selectedAmenities.value.join(",");
+  } else {
+    delete query.amenities;
+  }
+  // router.replace({ name: "SearchResults", query });
+  nextTick(() => {
+    router.replace({ name: "SearchResults", query });
+  });
 };
 
 watch(priceRange, (newRange) => {

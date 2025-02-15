@@ -222,10 +222,7 @@ const size = ref<"default" | "large" | "small">("default");
 
 <template>
   <div
-    :class="[
-      'w-full mx-auto bg-background rounded-lg shadow-lg p-4',
-      'bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60',
-    ]"
+    class="w-full mx-auto rounded-lg shadow-lg p-4 bg-white/10 backdrop-blur-md"
   >
     <div class="grid grid-cols-1 md:grid-cols-11 gap-4 container">
       <div class="md:col-span-4 relative">
@@ -239,7 +236,7 @@ const size = ref<"default" | "large" | "small">("default");
             v-model="location"
             type="text"
             placeholder="City, airport, region, landmark or property name"
-            className="w-full px-4 pt-7 pb-1 h-auto border rounded-md font-medium placeholder:text-sm"
+            className="w-full px-4 pt-7 pb-1 h-auto border rounded-md font-medium placeholder:text-sm text-black bg-slate-50"
           />
         </div>
         <button
@@ -270,7 +267,7 @@ const size = ref<"default" | "large" | "small">("default");
           <PopoverTrigger asChild>
             <Button
               variant="outline"
-              class="flex items-start justify-between w-full h-full border rounded-md p-1 bg-white cursor-pointer hover:border-gray-300 transition-all"
+              class="flex items-start justify-between w-full h-full border rounded-md p-1 bg-slate-50 cursor-pointer hover:border-gray-300 transition-all"
             >
               <div
                 class="flex flex-col justify-between px-3 py-1 relative group text-left h-full"

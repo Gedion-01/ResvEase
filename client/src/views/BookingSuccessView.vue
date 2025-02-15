@@ -97,9 +97,6 @@ const goToHomepage = () => {
               <Clipboard class="h-4 w-4" />
             </Button>
           </div>
-          <p class="text-xs text-gray-500 text-center">
-            Please save this Session ID for your records.
-          </p>
         </div>
       </CardContent>
       <CardFooter class="flex flex-col space-y-2">

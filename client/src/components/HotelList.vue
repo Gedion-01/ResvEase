@@ -8,6 +8,25 @@ import { useFilterStore } from "@/store/filterStore";
 import { watch, reactive, computed } from "vue";
 import HotelCardSkeleton from "./animations/HotelCardSkeleton.vue";
 import { Button } from "@/components/ui/button";
+import NoHotelsFound from "./404/NoHotelsFound.vue";
+
+interface QueryParams {
+  location: string;
+  checkIn: string;
+  checkOut: string;
+  adults: string;
+  children: string;
+  minPrice: string;
+  maxPrice: string;
+  rating: string;
+  amenities?: string;
+  page: string;
+  limit: string;
+}
+
+const props = defineProps<{
+  limit?: string;
+}>();
 
 const route = useRoute();
 const router = useRouter();
@@ -17,7 +36,7 @@ const filterStore = useFilterStore();
 searchStore.loadSearchParams();
 filterStore.loadFilterParams();
 
-const queryParams = reactive({
+const queryParams = reactive<QueryParams>({
   location: searchStore.location,
   checkIn: searchStore.checkIn,
   checkOut: searchStore.checkOut,
@@ -28,7 +47,7 @@ const queryParams = reactive({
   rating: filterStore.starRating.toString(),
   amenities: filterStore.selectedAmenities.join(","),
   page: "1",
-  limit: "1",
+  limit: props.limit || "6",
 });
 
 // if (JSON.stringify(route.query) !== JSON.stringify(queryParams)) {
@@ -41,7 +60,7 @@ const queryParams = reactive({
 // }
 
 const updateQueryParams = () => {
-  const query = {
+  const query: Record<string, string> = {
     location: queryParams.location,
     checkIn: queryParams.checkIn,
     checkOut: queryParams.checkOut,
@@ -50,8 +69,15 @@ const updateQueryParams = () => {
     minPrice: queryParams.minPrice,
     maxPrice: queryParams.maxPrice,
     rating: queryParams.rating,
-    amenities: queryParams.amenities,
   };
+
+  if (
+    queryParams.amenities &&
+    queryParams.amenities !== "undefined" &&
+    queryParams.amenities !== ""
+  ) {
+    query.amenities = queryParams.amenities;
+  }
 
   if (JSON.stringify(route.query) !== JSON.stringify(query)) {
     router.replace({
@@ -82,7 +108,7 @@ const handleUpdateFilter = (query: any) => {
   queryParams.minPrice = query.minPrice;
   queryParams.maxPrice = query.maxPrice;
   queryParams.rating = query.rating;
-  queryParams.amenities = query.amenities;
+  queryParams.amenities = query.amenities || "";
   refetch();
 };
 
@@ -107,17 +133,33 @@ const hotels = computed(() => {
   <div>
     <div
       v-if="isLoading || isFetching"
-      class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+      :class="[
+        'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6',
+        limit ? 'md:grid-cols-4 lg:grid-cols-4' : '',
+      ]"
     >
-      <HotelCardSkeleton v-for="index in 12" :key="index" />
+      <HotelCardSkeleton v-if="limit" v-for="index in 4" :key="index + limit" />
+      <HotelCardSkeleton v-else v-for="index in 12" :key="index" />
     </div>
     <div v-else-if="isError">Error loading hotels</div>
-    <div v-else>
+    <div v-else-if="hotels.length === 0">
+      <NoHotelsFound />
+    </div>
+    <div v-else-if="route.name == 'SearchResults'">
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <HotelCard v-for="item in hotels" :key="item?.id" :hotel="item!" />
       </div>
     </div>
-    <div class="flex items-center justify-center mt-6">
+
+    <div v-else>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <HotelCard v-for="item in hotels" :key="item?.id" :hotel="item!" />
+      </div>
+    </div>
+    <div
+      v-if="route.name == 'Search'"
+      class="flex items-center justify-center mt-6"
+    >
       <Button
         :v-if="hasNextPage"
         :disabled="isFetching || !hasNextPage"

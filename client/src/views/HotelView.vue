@@ -40,7 +40,7 @@ if (error) {
 </script>
 
 <template>
-  <div class="">
+  <div class="bg-slate-100">
     <div
       ref="searchSection"
       :class="[
