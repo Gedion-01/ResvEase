@@ -204,7 +204,7 @@ func GenerateSpecificHotelsAndRooms(store *db.Store, user *types.User) {
 			BedType:     "1 Double Bed or 2 Single Beds",
 			Bedrooms:    1,
 			Amenities:   []string{"Free Wi-Fi", "Air conditioning", "Private bathroom"},
-			Images:      []string{"https://ak-d.tripcdn.com/images/200a1f000001g7dnr873C_R_600_400_R5.webp", "https://ak-d.tripcdn.com/images/0222o12000adrtbek7A71_R_600_400_R5.webps", "https://ak-d.tripcdn.com/images/1mc5p12000bj3mnr9EF94_R_600_400_R5.webp"},
+			Images:      []string{"https://ak-d.tripcdn.com/images/200a1f000001g7dnr873C_R_600_400_R5.webp", "https://ak-d.tripcdn.com/images/0222o12000adrtbek7A71_R_600_400_R5.webp", "https://ak-d.tripcdn.com/images/1mc5p12000bj3mnr9EF94_R_600_400_R5.webp"},
 			Features:    []string{"Non-smoking", "Instant Confirmation", "Prepay online"},
 		},
 		{
