@@ -60,14 +60,14 @@ func main() {
 	apiv1.Get("/hotel/:id", hotelHandler.HandleGetHotel)
 	apiv1.Get("/hotel/:id/rooms", hotelHandler.HandleGetRooms)
 
-	// Versioned API routes
-	// user handlers
 	apiv1.Use(func(c *fiber.Ctx) error {
 		if c.Path() == "/api/v1/auth" || c.Path() == "/api/v1/signup" {
 			return c.Next()
 		}
 		return api.JWTAuthentication(userStore)(c)
 	})
+
+	// user handlers
 	apiv1.Get("/user", userHandler.HandleGetUsers)
 	apiv1.Get("/user/:id", userHandler.HandleGetUser)
 	apiv1.Delete("/user/:id", userHandler.HandleDeleteUser)
@@ -79,14 +79,12 @@ func main() {
 	// bookings handlers
 	apiv1.Get("/bookings/user/:id", bookingHandler.HandleGetUserBookings)
 	apiv1.Get("/booking/:id", bookingHandler.HandleGetUserBooking)
-
 	apiv1.Post("/room/book", roomHandler.HandleBookRoom)
+	apiv1.Get("/booking/:id/cancel", bookingHandler.HandleCancelBooking)
 
 	// admin handlers
 	admin.Use(api.AdminAuth)
 	// admin.Get("/booking", bookingHandler.HandleGetBookings)
-
-	apiv1.Get("/booking/:id/cancel", bookingHandler.HandleCancelBooking)
 
 	listenAddr := os.Getenv("HTTP_LISTEN_ADDRESS")
 	app.Listen(listenAddr)

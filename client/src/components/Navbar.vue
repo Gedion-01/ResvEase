@@ -77,12 +77,7 @@ const handleLogout = () => {
 
         <nav class="hidden md:flex items-center space-x-6">
           <RouterLink
-            v-for="(link, index) in [
-              'Search',
-              'Deals',
-              'My Bookings',
-              'Sign in',
-            ]"
+            v-for="(link, index) in ['Search', 'My Bookings', 'Sign in']"
             :key="index"
             :to="
               link === 'Search'
