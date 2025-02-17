@@ -1,9 +1,5 @@
 # ResvEase
 
-## Find Your Perfect Stay
-
-Discover luxury accommodations worldwide for unforgettable experiences.
-
 ## Overview
 
 ResvEase is a modern booking platform that allows users to search, filter, and reserve accommodations seamlessly. Built with Vue.js, Go, Fiber, and MongoDB, it provides a fast and intuitive experience with secure payment processing via Stripe.
