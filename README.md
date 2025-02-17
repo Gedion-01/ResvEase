@@ -17,6 +17,27 @@ ResvEase is a modern booking platform that allows users to search, filter, and r
 - **Booking Management**: Check your booking history and details on the "My Bookings" page.
 - **Date-Based Availability**: Book rooms based on date range, ensuring availability if not already booked by another user.
 
+## Screenshots
+
+<details>
+  <summary>Screenshots</summary>
+
+![Image](https://github.com/user-attachments/assets/7acf38fc-cdc9-4f5b-8c11-ee5e38ca1107)
+
+![Image](https://github.com/user-attachments/assets/e9880f89-b9a2-4bf0-be27-c6d9cb1e5787)
+
+![Image](https://github.com/user-attachments/assets/64633ede-0c10-41b7-b85e-69e63f5f554e)
+
+![Image](https://github.com/user-attachments/assets/84376e74-f0ae-4b06-87e1-f95d89262e8c)
+
+![Image](https://github.com/user-attachments/assets/3b2bd057-c1d4-418e-a818-39413ba8a67d)
+
+![Image](https://github.com/user-attachments/assets/d6847e33-23ac-4c16-a5dc-26012019ce97)
+
+![Image](https://github.com/user-attachments/assets/79bd9fbc-c679-42fa-9091-ba9cb3060a4a)
+
+</details/>
+
 ## Tech Stack
 
 - **Frontend**: Vue.js
@@ -111,24 +132,6 @@ For handling Stripe payments and ensuring proper event processing, you need to s
 4. Reserve a room by filling out the form and completing payment through Stripe.
 5. Book rooms based on a date range if they are available and not already booked by another user.
 6. View and manage your bookings under the "My Bookings" section.
-
-<details>
-  <summary>ScreenShots</summary>
-
-<img src="https://github.com/user-attachments/assets/7acf38fc-cdc9-4f5b-8c11-ee5e38ca1107" />
-
-<img src="https://github.com/user-attachments/assets/e9880f89-b9a2-4bf0-be27-c6d9cb1e5787" />
-
-![Image](https://github.com/user-attachments/assets/64633ede-0c10-41b7-b85e-69e63f5f554e)
-
-![Image](https://github.com/user-attachments/assets/84376e74-f0ae-4b06-87e1-f95d89262e8c)
-
-![Image](https://github.com/user-attachments/assets/3b2bd057-c1d4-418e-a818-39413ba8a67d)
-
-![Image](https://github.com/user-attachments/assets/d6847e33-23ac-4c16-a5dc-26012019ce97)
-
-![Image](https://github.com/user-attachments/assets/79bd9fbc-c679-42fa-9091-ba9cb3060a4a)
-</details/>
 
 ## Contributing
 
