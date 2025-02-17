@@ -79,9 +79,7 @@ const goToHome = () => {
       <div class="w-full max-w-md">
         <div class="text-center mb-8">
           <!-- <img src="/logo.png" alt="HotelHub Logo" class="mx-auto h-16 mb-4" /> -->
-          <h2 class="text-3xl font-bold text-gray-800">
-            Welcome to BookMyStay
-          </h2>
+          <h2 class="text-3xl font-bold text-gray-800">Welcome to ResvEase</h2>
           <p class="text-gray-600">
             Your gateway to extraordinary stays worldwide
           </p>

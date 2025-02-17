@@ -21,7 +21,7 @@ const navigateToSearch = () => {
       <section class="py-12">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 class="text-3xl font-bold text-center mb-8">Featured Hotels</h2>
-          <HotelList :limit="4" />
+          <HotelList limit="4" />
           <div class="text-center mt-8">
             <Button @click="navigateToSearch" size="lg"
               >View More Hotels</Button
@@ -34,7 +34,5 @@ const navigateToSearch = () => {
 
       <SpecialOffers />
     </main>
-
-    <Footer />
   </div>
 </template>

@@ -67,8 +67,6 @@ const searchStore = useSearchStore();
 searchStore.loadSearchParams();
 bookingStore.loadBookingData();
 
-console.log(bookingStore.hotel);
-
 const value = ref<[Date, Date]>([
   new Date(searchStore.checkIn),
   new Date(searchStore.checkOut),
@@ -147,7 +145,6 @@ const handleSubmit = async () => {
     };
 
     const response = await bookRoom(data);
-    console.log(response?.data);
     // Redirect to Stripe Checkout
     if (response?.data.sessionUrl) {
       window.location.href = response?.data.sessionUrl;

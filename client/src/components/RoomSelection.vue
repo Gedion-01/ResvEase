@@ -57,8 +57,6 @@ const searchStore = useSearchStore();
 const bookingStore = useRoomBookingStore();
 const authStore = useAuthStore();
 
-console.log(authStore);
-
 const route = useRoute();
 const router = useRouter();
 
@@ -285,7 +283,6 @@ watch(data, calculateFilterCounts, { immediate: true });
 const reserveRoom = (room: Room) => {
   bookingStore.setRoomBookingDetails(room);
   bookingStore.setHotelBookingDetails(props.hotel);
-  console.log(searchStore.adults, searchStore.children);
   bookingStore.setGuests(searchStore.adults, searchStore.children);
   if (!authStore.isAuthenticated) {
     loginPromptDialogRef.value.openDialog();

@@ -40,7 +40,6 @@ const { handleSubmit, ...loginForm } = useForm({
 });
 
 const onLoginSubmit = handleSubmit(async (values) => {
-  console.log("Login data:", values);
   isLoading.value = true;
   errorMessage.value = "";
   const timeout = setTimeout(() => {

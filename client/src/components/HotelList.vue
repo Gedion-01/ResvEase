@@ -127,6 +127,9 @@ const nextpage = () => {
 
 const hotels = computed(() => {
   if (!data.value) return [];
+  if (props.limit) {
+    return data.value.pages.flatMap((page) => page.pageData).slice(0, 4);
+  }
   return data.value.pages.flatMap((page) => page.pageData);
 });
 </script>
@@ -160,7 +163,7 @@ const hotels = computed(() => {
       </div>
     </div>
     <div
-      v-if="route.name == 'Search'"
+      v-if="route.name == 'SearchResults'"
       class="flex items-center justify-center mt-6"
     >
       <Button

@@ -7,15 +7,13 @@ import {
 } from "@/types/hotel";
 import axios from "axios";
 
-export const BASE_URL = "http://localhost:5000/api/v1";
+export const BASE_URL = import.meta.env.VITE_API_ENDPOINT;
 
 const apiClient = axios.create({ baseURL: BASE_URL });
 
 apiClient.interceptors.request.use((config) => {
   const authStore = useAuthStore();
   const token = authStore.token;
-
-  console.log("token", token);
 
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
@@ -44,7 +42,6 @@ export const getHotel = async (hotelId: string) => {
 export const getHotels = async (queryParams: Record<string, any>) => {
   try {
     const queryString = new URLSearchParams(queryParams).toString();
-    console.log(queryString, queryParams);
     const response = await apiClient.get<HotelResponse>(
       `/hotel?${queryString}`
     );
@@ -70,7 +67,6 @@ export const getRooms = async (
   queryParams: Record<string, any>
 ) => {
   const queryString = new URLSearchParams(queryParams).toString();
-  console.log(queryString);
   const response = await apiClient.get<RoomResponse>(
     `/hotel/${hotelId}/rooms?${queryString}`
   );
@@ -97,7 +93,6 @@ export const bookRoom = async (data: BookingData) => {
     const response = await apiClient.post("/room/book", data);
     return response;
   } catch (err) {
-    console.log(err);
     throw err;
   }
 };

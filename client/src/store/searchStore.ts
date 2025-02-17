@@ -31,7 +31,6 @@ export const useSearchStore = defineStore("search", {
         const storedCheckIn = parsedParams.checkIn
           ? parseISO(parsedParams.checkIn)
           : null;
-        console.log("sdddd", params, this.checkIn, this.checkOut);
         const storedCheckOut = parsedParams.checkOut
           ? parseISO(parsedParams.checkOut)
           : null;

@@ -5,7 +5,6 @@ import apiClient from "@/services/api";
 
 export const useAuthStore = defineStore("auth", () => {
   const token = ref(localStorage.getItem("authToken") || null);
-  console.log("token", token.value);
   const user = ref(JSON.parse(localStorage.getItem("user") || "{}"));
   const redirectUrl = ref<string | null>(null);
   const router = useRouter();

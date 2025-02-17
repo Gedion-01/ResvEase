@@ -43,8 +43,6 @@ const guests = reactive({
 
 const viewMode = ref<"list" | "map">("list");
 
-console.log("searchStore", searchStore.checkIn, searchStore.checkOut);
-
 const timeZone = getLocalTimeZone();
 
 const value = ref<[Date, Date]>([
@@ -83,7 +81,6 @@ const shortcuts = [
 const handleDateChange = (val: [Date, Date]) => {
   value.value = val;
 };
-console.log("value", value.value);
 const formattedStart = computed(() => {
   if (value.value && value.value[0]) {
     return format(value.value[0], "iii, MMM dd");

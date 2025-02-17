@@ -65,24 +65,19 @@ const handleLogout = () => {
           <RouterLink class="flex items-center space-x-2" to="/">
             <!-- <img
               src="/path-to-your-logo.svg"
-              alt="BookMyStay Logo"
+            
               class="h-8 w-auto"
             /> -->
             <span
               class="hidden text-xl font-bold text-slate-800 sm:inline-block"
-              >BookMyStay</span
+              >ResvEase</span
             >
           </RouterLink>
         </div>
 
-        <nav class="hidden md:flex items-center space-x-6">
+        <nav class="hidden md:flex items-center space-x-6 main-nav">
           <RouterLink
-            v-for="(link, index) in [
-              'Search',
-              'Deals',
-              'My Bookings',
-              'Sign in',
-            ]"
+            v-for="(link, index) in ['Search', 'My Bookings', 'Sign in']"
             :key="index"
             :to="
               link === 'Search'
@@ -94,7 +89,7 @@ const handleLogout = () => {
                 : `/${link.toLowerCase()}`
             "
             :class="[
-              'text-sm font-medium transition-colors hover:text-slate-900',
+              'text-sm nav-link font-medium transition-colors hover:text-slate-900',
               (authStore.isAuthenticated && link === 'Sign in') ||
               (!authStore.isAuthenticated && link === 'My Bookings')
                 ? 'hidden'
@@ -211,5 +206,27 @@ const handleLogout = () => {
 <style scoped>
 .router-link-active {
   color: theme("colors.primary.DEFAULT");
+}
+.nav-link {
+  position: relative;
+  padding-bottom: 2px;
+  transition: color 0.3s ease;
+}
+.nav-link::after {
+  content: "";
+  position: absolute;
+  bottom: 0px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background-color: theme("colors.primary.DEFAULT");
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+  border-radius: 4px;
+}
+.nav-link:hover::after,
+.nav-link.router-link-active::after {
+  transform: scaleX(1);
 }
 </style>

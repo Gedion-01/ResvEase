@@ -38,7 +38,7 @@ const router = createRouter({
       path: "/auth",
       name: "Auth",
       component: AuthView,
-      meta: { requiresGuest: true, hideNavbar: true },
+      meta: { requiresGuest: true, hideNavbar: true, hideFooter: true },
     },
     {
       path: "/bookings",

@@ -156,12 +156,10 @@ const primaryAction = () => {
       closeDialog();
   }
 
-  console.log(`Primary action for ${props.errorType}`);
   closeDialog();
 };
 
 const secondaryAction = () => {
-  console.log(`Secondary action for ${props.errorType}`);
   closeDialog();
 };
 

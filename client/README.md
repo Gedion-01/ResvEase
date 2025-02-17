@@ -1,1 +1,1 @@
-# Hotel-Reservation-App Client-side
+# ResvEase Client-side
