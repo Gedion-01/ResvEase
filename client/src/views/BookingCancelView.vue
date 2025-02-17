@@ -16,9 +16,7 @@ const goBack = () => {
   router.back();
 };
 
-const retryPayment = () => {
-  console.log("Retrying payment...");
-};
+const retryPayment = () => {};
 
 const modifyBooking = () => {
   router.push("/booking");

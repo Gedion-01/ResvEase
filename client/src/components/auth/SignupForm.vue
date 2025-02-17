@@ -67,7 +67,6 @@ const { handleSubmit, ...signupForm } = useForm({
 });
 
 const onSignupSubmit = handleSubmit(async (values) => {
-  console.log("Signup data:", values);
   isLoading.value = true;
   errorMessage.value = "";
   const timeout = setTimeout(() => {
