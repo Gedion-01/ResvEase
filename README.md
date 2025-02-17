@@ -69,7 +69,7 @@ ResvEase is a modern booking platform that allows users to search, filter, and r
 
 ### Frontend Setup
 
-1. Navigate to the frontend directory:
+1. Navigate to the client directory:
    ```sh
    cd ../client
    ```
