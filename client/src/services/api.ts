@@ -7,7 +7,7 @@ import {
 } from "@/types/hotel";
 import axios from "axios";
 
-export const BASE_URL = "http://localhost:5000/api/v1";
+export const BASE_URL = import.meta.env.VITE_API_ENDPOINT;
 
 const apiClient = axios.create({ baseURL: BASE_URL });
 
