@@ -182,7 +182,7 @@ const handleSubmit = async () => {
 };
 
 const nextStep = () => {
-  if (step.value === 3) {
+  if (step.value === 2) {
     handleSubmit();
   } else {
     step.value += 1;
@@ -523,8 +523,6 @@ const handleDateChange = (val: [Date, Date]) => {
                   />
                 </div>
               </div>
-
-              <div v-if="step === 2" class="space-y-6"></div>
             </div>
           </transition>
         </CardContent>

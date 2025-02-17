@@ -61,7 +61,7 @@ const goToHomepage = () => {
 
 <template>
   <div
-    class="min-h-screen bg-gradient-to-br from-green-50 to-teal-100 flex items-center justify-center p-4"
+    class="min-h-screen bg-gradient-to-br bg-slate-50 flex items-center justify-center p-4"
   >
     <Card class="w-full max-w-lg">
       <CardHeader class="space-y-1">
