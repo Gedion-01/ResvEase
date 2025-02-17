@@ -65,7 +65,7 @@ const handleLogout = () => {
           <RouterLink class="flex items-center space-x-2" to="/">
             <!-- <img
               src="/path-to-your-logo.svg"
-              alt="BookMyStay Logo"
+            
               class="h-8 w-auto"
             /> -->
             <span
